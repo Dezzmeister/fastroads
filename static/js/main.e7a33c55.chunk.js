@@ -234,7 +234,7 @@
             (this.onKeyUp = this.onKeyUpUnlocked));
         }
       })();
-      var u = {
+      var keyMap = {
         Forward: "KeyW",
         Left: "KeyA",
         Right: "KeyD",
@@ -376,15 +376,15 @@
               (this.playTime = 0),
               (this.pTime = this.startTime),
               (this.pSlowTime = this.startTime),
-              p.addListener(u.Pause, () => {
+              p.addListener(keyMap.Pause, () => {
                 this.toggle(!0);
               }),
               c &&
-                (p.addListener(u.StepTicker, this.tickOnce.bind(this)),
-                p.addListener(u.Plus, () => {
+                (p.addListener(keyMap.StepTicker, this.tickOnce.bind(this)),
+                p.addListener(keyMap.Plus, () => {
                   (this.playSpeed += 0.25), console.log(this.playSpeed);
                 }),
-                p.addListener(u.Minus, () => {
+                p.addListener(keyMap.Minus, () => {
                   this.playSpeed > 0.3 && (this.playSpeed -= 0.25),
                     console.log(this.playSpeed);
                 })),
@@ -533,7 +533,7 @@
           vol: 0.5,
         },
       };
-      var D = new (class {
+      var Audio = new (class {
         constructor() {
           (this.loader = new r.d()),
             (this.hasInit = !1),
@@ -621,7 +621,7 @@
       const M = "reset",
         N = "modelChanged",
         j = "headlights";
-      class C extends r.G {
+      class Car extends r.G {
         constructor() {
           super(),
             (this.listeners = {}),
@@ -792,7 +792,7 @@
           i >= 0 && this.listeners[e].splice(i, 1);
         }
       }
-      var z = new C();
+      var z = new Car();
       const k = 0.3,
         S = window.localStorage.getItem("settings-camera-mode") || 0;
       var O =
@@ -883,7 +883,8 @@
           return s && (o.normalMap = G(s, i)), (o.onBeforeCompile = B(o, h)), o;
         };
       var F = G;
-      const H = [
+      const renderLevels = [
+          // low
           {
             midlineHorizon: 1500,
             midlineFineHorizon: 100,
@@ -895,6 +896,7 @@
             wallGenHorizon: 65,
             wallRenderHorizon: 20,
           },
+          // med
           {
             midlineHorizon: 1500,
             midlineFineHorizon: 100,
@@ -906,6 +908,7 @@
             wallGenHorizon: 80,
             wallRenderHorizon: 35,
           },
+          // high
           {
             midlineHorizon: 1500,
             midlineFineHorizon: 110,
@@ -917,6 +920,7 @@
             wallGenHorizon: 95,
             wallRenderHorizon: 50,
           },
+          // ultra
           {
             midlineHorizon: 2e3,
             midlineFineHorizon: 125,
@@ -928,6 +932,19 @@
             wallGenHorizon: 115,
             wallRenderHorizon: 70,
           },
+          // ultra+
+          {
+            midlineHorizon: 4e3,
+            midlineFineHorizon: 150,
+            farSize: 1e3,
+            viewDist: 8e3,
+            fwdHorizon: 300,
+            rearHorizon: 25,
+            nearFwdHorizon: 50,
+            wallGenHorizon: 115,
+            wallRenderHorizon: 70,
+          },
+          // ?
           {
             midlineFineHorizon: 50,
             farSize: 1e3,
@@ -943,7 +960,7 @@
           { medRes: 10, nearRes: 20 },
           { medRes: 12, nearRes: 24 },
         ],
-        Y = isNaN(
+        storedViewLodIndex = isNaN(
           parseInt(window.localStorage.getItem("config-view-lod-index"))
         )
           ? 2
@@ -953,28 +970,28 @@
         )
           ? 1
           : parseInt(window.localStorage.getItem("config-detail-lod-index")),
-        V = H[Y],
+        renderLevel = renderLevels[storedViewLodIndex],
         X = Q[U];
-      const J = (e) => {
-          (V = H[e]),
-            (le = V.farSize),
-            (de = le / 10),
-            (pe = V.viewDist),
+      const setRenderLevel = (viewLodIndex) => {
+          (renderLevel = renderLevels[viewLodIndex]),
+            (farSize = renderLevel.farSize),
+            (de = farSize / 10),
+            (viewDist = renderLevel.viewDist),
             (ue =
-              pe /
+              viewDist /
               Math.cos(
                 ((ce * (Math.PI / 180)) / 2) *
                   (window.screen.availWidth / window.screen.availHeight)
               )),
-            ($ = V.midlineHorizon),
-            (ie = V.midlineFineHorizon),
-            (xe = V.fwdHorizon),
-            (ve = V.rearHorizon),
-            (fe = V.nearFwdHorizon),
-            (ye = V.rearHorizon),
-            (Le = V.wallGenHorizon),
-            (Re = V.wallRenderHorizon),
-            (ge.density = Math.sqrt(5 / (pe * pe)));
+            (midlineHorizon = renderLevel.midlineHorizon),
+            (midlineFineHorizon = renderLevel.midlineFineHorizon),
+            (fwdHorizon = renderLevel.fwdHorizon),
+            (rearHorizon = renderLevel.rearHorizon),
+            (nearFwdHorizon = renderLevel.nearFwdHorizon),
+            (rearHorizon2 = renderLevel.rearHorizon),
+            (wallGenHorizon = renderLevel.wallGenHorizon),
+            (wallRenderHorizon = renderLevel.wallRenderHorizon),
+            (ge.density = Math.sqrt(5 / (viewDist * viewDist)));
         },
         q = (e) => {
           (X = Q[e]),
@@ -983,8 +1000,8 @@
             (be = X.nearRes),
             (ge =
               e > 1
-                ? new r.q(16777215, Math.sqrt(5 / (pe * pe)))
-                : new r.p(16777215, 0.1 * pe, pe));
+                ? new r.q(16777215, Math.sqrt(5 / (viewDist * viewDist)))
+                : new r.p(16777215, 0.1 * viewDist, viewDist));
         },
         K = (e, t, i) => {
           ge.color.setHex(e),
@@ -993,10 +1010,10 @@
             ge.isFogExp2 && (ge.density = Math.sqrt(5 / (i * i)));
         },
         _ = () => ge;
-      let $ = 1500;
+      let midlineHorizon = 1500;
       const ee = 1e3,
-        te = $ - ee;
-      let ie = V.midlineFineHorizon,
+        te = midlineHorizon - ee;
+      let midlineFineHorizon = renderLevel.midlineFineHorizon,
         se = 7;
       const ae = (e) => {
           se = e;
@@ -1006,25 +1023,25 @@
         re = new r.j(16777215, 0.6);
       re.sunOffset = new r.U(0, 100, 0);
       const oe = new r.i(16777215);
-      let le = V.farSize,
-        de = le / 10;
+      let farSize = renderLevel.farSize,
+        de = farSize / 10;
       const ce = 68;
-      let pe = le * Math.floor(2.5),
+      let viewDist = farSize * Math.floor(2.5),
         ue =
-          pe /
+          viewDist /
           Math.cos(
             ((ce * (Math.PI / 180)) / 2) *
               (window.screen.availWidth / window.screen.availHeight)
           );
-      let ge = new r.p(16777215, 0.1 * pe, pe);
+      let ge = new r.p(16777215, 0.1 * viewDist, viewDist);
       const Ae = 10;
       let me = X.medRes,
-        xe = V.fwdHorizon,
-        ve = V.rearHorizon;
+        fwdHorizon = renderLevel.fwdHorizon,
+        rearHorizon = renderLevel.rearHorizon;
       const we = 10;
       let be = X.nearRes,
-        fe = V.nearFwdHorizon,
-        ye = ve;
+        nearFwdHorizon = renderLevel.nearFwdHorizon,
+        rearHorizon2 = rearHorizon;
       let Ie = 1.4;
       const De = (e) => {
         Ie = e;
@@ -1043,10 +1060,10 @@
         },
         Se = 0.4,
         Oe = new r.F({ map: null, alphaTest: 0.75 });
-      let Le = V.wallGenHorizon,
-        Re = V.wallRenderHorizon;
+      let wallGenHorizon = renderLevel.wallGenHorizon,
+        wallRenderHorizon = renderLevel.wallRenderHorizon;
       const Te = 30;
-      V.treeRenderHorizon;
+      renderLevel.treeRenderHorizon;
       const Pe = new r.C({ depthTest: !1, fog: !0, map: F(null, 2) });
       (Pe.userData.nearCol = { value: new r.i(0) }),
         (Pe.userData.farCol = { value: new r.i(65535) }),
@@ -1085,20 +1102,20 @@
       Ge.fwd = new r.U(0, 0, 1);
       var Be = Ge;
       const Ee = () => Date.now().toString(16).substring(3);
-      let Ze = Ee(),
+      let seed = Ee(),
         We = 0,
         Fe = window.location.search.substring(1).split("&"),
-        He = localStorage.getItem("seed");
-      if (He) {
-        console.log("Restoring seed from local storage"), (Ze = He);
+        storedSeed = localStorage.getItem("seed");
+      if (storedSeed) {
+        console.log("Restoring seed from local storage"), (seed = storedSeed);
         let e = localStorage.getItem("config-scene-topography") || "normal",
-          t = Ze + "?" + e,
+          t = seed + "?" + e,
           i = 0;
         try {
           (i = JSON.parse(localStorage.getItem(t)) || 0),
             console.log("Restoring saved progress to node ", i);
         } catch (Tc) {
-          console.warn("Could not load saved progress for seed ", Ze);
+          console.warn("Could not load saved progress for seed ", seed);
         }
         We = i;
       }
@@ -1106,7 +1123,7 @@
         for (let Pc of Fe) {
           let e = Pc.split("=");
           if ("seed" == e[0])
-            console.log("Overriding seed with querystring"), (Ze = e[1]);
+            console.log("Overriding seed with querystring"), (seed = e[1]);
           else if ("node" == e[0]) {
             console.log("Overriding start node with querystring");
             try {
@@ -1116,14 +1133,14 @@
             }
           }
         }
-      localStorage.setItem("seed", Ze);
+      localStorage.setItem("seed", seed);
       const Qe = (e = null, t = !1) => (
           null === e && (e = Ee()),
-          (e = e.toString()) == Ze ||
+          (e = e.toString()) == seed ||
             (!Ye(e) &&
               (localStorage.setItem("seed", e),
               t && window.location.reload(),
-              (Ze = e),
+              (seed = e),
               !0))
         ),
         Ye = (e) => {
@@ -1133,11 +1150,11 @@
             (console.warn("Invalid seed ", t), !0)
           );
         };
-      (Ze = Ze.toString()), console.log("SEED: ", Ze);
-      if (((He = localStorage.getItem("start-node")), He)) {
-        console.log("Restoring starting node as ", He);
+      (seed = seed.toString()), console.log("SEED: ", seed);
+      if (((storedSeed = localStorage.getItem("start-node")), storedSeed)) {
+        console.log("Restoring starting node as ", storedSeed);
         try {
-          We = JSON.parse(He);
+          We = JSON.parse(storedSeed);
         } catch (Tc) {
           console.warn("Failed to retrieve intial node from ls");
         }
@@ -1436,8 +1453,8 @@
             (this.indexOffset = this.tileIndex * this.tileset.vertexCount),
             (this.genRow = 0),
             (this.genIndex = 0),
-            (this.farCell.x = Math.floor(this.originPos.x / le)),
-            (this.farCell.z = Math.floor(this.originPos.z / le)),
+            (this.farCell.x = Math.floor(this.originPos.x / farSize)),
+            (this.farCell.z = Math.floor(this.originPos.z / farSize)),
             (this.preHeights = []),
             0 == dr.value.detailLodIndex
               ? (this.precomputeHeights(),
@@ -1907,7 +1924,7 @@
             (this.res = de),
             (this.res1 = this.res + 1),
             (this.res3 = 3 * this.res1),
-            (this.size = le),
+            (this.size = farSize),
             (this.heightmap = e),
             (this.heights = []),
             (this.grads = []),
@@ -1997,7 +2014,7 @@
           return this.mesh.visible && this.display(), (this.ready = !0), !0;
         }
         lookupHeight(e, t) {
-          return e < 0 || e > le || t < 0 || t > le
+          return e < 0 || e > farSize || t < 0 || t > farSize
             ? this.heightmap.getXZ(this.originPos.x + e, this.originPos.z + t)
             : ((at.cx = Math.max(e / 10, 0)),
               (at.cz = Math.max(t / 10, 0)),
@@ -2032,7 +2049,7 @@
         }
         computeSquareNormalsRow(e) {
           for (
-            at.d = le / this.res,
+            at.d = farSize / this.res,
               at.d2 = 2 * at.d,
               at.normalAttribute = this.geo.attributes.normal,
               at.curvatureAttribute = this.geo.attributes.curvature,
@@ -2119,7 +2136,7 @@
       (ht.sceneName = "Scene"), (ht.hasTrees = !0), (ht.hasGrass = !0);
       var rt = class {
         constructor(e) {
-          this.rand = new window.alea(e || Ze);
+          this.rand = new window.alea(e || seed);
         }
         generate() {}
         getXZ(e, t) {
@@ -3337,8 +3354,8 @@
               : 1 == t
               ? (Ti = Math.floor(ue / 100))
               : 2 == t
-              ? (Ti = Math.floor(le / 50))
-              : 3 == t && (Ti = Math.floor(le / 25)),
+              ? (Ti = Math.floor(farSize / 50))
+              : 3 == t && (Ti = Math.floor(farSize / 25)),
             Pi(t);
         },
         vi = new r.F({ map: F(ut, 0), displacementMap: F(pi, 4) }),
@@ -3471,7 +3488,7 @@
             e
           ));
       };
-      xi(Y, U);
+      xi(storedViewLodIndex, U);
       var Gi = mi;
       const Bi = [0, 180, 480, 900];
       var Ei = new (class extends l {
@@ -3528,7 +3545,7 @@
       var Ui = Zi;
       var Vi = {
           version: Ui,
-          seed: Ze,
+          seed: seed,
           "draw-calls": 0,
           "heightmap-cache": 0,
           "roadside-objects": 0,
@@ -4064,7 +4081,7 @@
         constructor(e = 10, t = 1, i = 0) {
           (this.rands = []),
             (this.index = 0),
-            (this.rand = new window.alea(Ze));
+            (this.rand = new window.alea(seed));
           for (let s = 0; s < e; s++) this.rands.push(this.rand() * t - i);
           (this.count = e), (this.index = 0);
         }
@@ -5605,11 +5622,11 @@
             (this.barrierGenerator = new $s(Ke.vehicleNode, fa.Barrier));
           do {
             this.updateGeneration();
-          } while (this.genIndex < Ke.vehicleIndex + Le);
+          } while (this.genIndex < Ke.vehicleIndex + wallGenHorizon);
           for (
             ;
             this.segments.length > 0 &&
-            Ke.vehicleIndex + Re >= this.segments[0].startNode.i;
+            Ke.vehicleIndex + wallRenderHorizon >= this.segments[0].startNode.i;
 
           )
             this.drawNextSegment();
@@ -5636,7 +5653,7 @@
             (this.renderIndex = Ke.tail.i));
         }
         updateGeneration() {
-          this.genIndex < Ke.vehicleIndex + Le && this.genIndex++,
+          this.genIndex < Ke.vehicleIndex + wallGenHorizon && this.genIndex++,
             this.genNodeLeft.i < this.genIndex &&
               ((this.genNodeLeft = this.genNodeLeft.next),
               this.checkGenerateLeftSegment()),
@@ -5648,7 +5665,7 @@
           for (
             this.updateGeneration();
             this.segments.length > 0 &&
-            Ke.vehicleIndex + Re >= this.segments[0].startNode.i;
+            Ke.vehicleIndex + wallRenderHorizon >= this.segments[0].startNode.i;
 
           )
             this.drawNextSegment();
@@ -6256,7 +6273,13 @@
             let t = e.i - this.root.i,
               i = this.getWallObject();
             i.drawBridge(this.root),
-              Zs.addCustom(i, this.root.p, 0, this.root.i, -(Re - 10));
+              Zs.addCustom(
+                i,
+                this.root.p,
+                0,
+                this.root.i,
+                -(wallRenderHorizon - 10)
+              );
             let s = this.getShadowObject();
             s.drawBridge(this.root), Zs.addCustom(s, this.root.p, 0, e.i, 50);
             let a = (t + 1) % 2;
@@ -7364,7 +7387,7 @@
             (this.stagedTiles = { trees: {}, brush: {} }),
             (this.hasTrees = !0),
             (this.hasGrass = !0),
-            (this.rand = new window.alea(Ze)),
+            (this.rand = new window.alea(seed)),
             (this.rands = []),
             (this.randIndex = 0),
             (this.farTreeInstancePool = []),
@@ -7373,8 +7396,8 @@
             this.buildRands();
         }
         buildMap(e) {
-          (this.treeMap = new Ea(Ze, e)),
-            (this.grassMap = new Pa(Ze, {
+          (this.treeMap = new Ea(seed, e)),
+            (this.grassMap = new Pa(seed, {
               heightScale: 2,
               heightOffset: 0.5,
               heightInitial: 0,
@@ -8491,7 +8514,7 @@
         ],
       };
       var dn = ln;
-      let cn = le,
+      let cn = farSize,
         pn = 2 * cn * 3;
       const un = 1.45,
         gn = ze + 1.25,
@@ -8549,7 +8572,7 @@
             (this.getXZQuick = t),
             (this.getTreeDensity = i),
             (this.addTree = s),
-            (cn = le),
+            (cn = farSize),
             (pn = 2 * cn * 3),
             (this.renderWalls = a),
             (this.geo = new vn()),
@@ -8578,7 +8601,7 @@
             (this.entryNode = t),
               (this.exitNode = i),
               (this.distantResolution = 10),
-              (this.checkBothDirections = i.i - t.i > 0.15 * le || !a);
+              (this.checkBothDirections = i.i - t.i > 0.15 * farSize || !a);
           } else
             (this.originNode = null),
               (this.entryNode = null),
@@ -8623,7 +8646,7 @@
               (xn.tX -= this.fieldMapOffset.x),
               (xn.tZ -= this.fieldMapOffset.z),
               (xn.debug = this.debug && (24 == xn.fi || 25 == xn.fi)),
-              xn.fX < le && xn.fZ < le)
+              xn.fX < farSize && xn.fZ < farSize)
             ) {
               for (xn.fn of xn.f.nodes)
                 if (
@@ -8632,7 +8655,7 @@
                   (xn.fnZ = xn.fnn[1] - this.fieldMapOffset.z),
                   xn.fnX < 0 && (xn.fnX += 1e3),
                   xn.fnZ < 0 && (xn.fnZ += 1e3),
-                  xn.fnX > le || xn.fnZ > le)
+                  xn.fnX > farSize || xn.fnZ > farSize)
                 )
                   return;
               if (
@@ -9547,8 +9570,11 @@
                 (this.dynamicFogFar = 0.2 + 0.8 * this.dynamicFogNear),
                 K(
                   this.weather.col,
-                  pe * this.weather.fogNear * this.dynamicFogNear,
-                  Math.max(50, pe * this.weather.fogFar * this.dynamicFogFar)
+                  viewDist * this.weather.fogNear * this.dynamicFogNear,
+                  Math.max(
+                    50,
+                    viewDist * this.weather.fogFar * this.dynamicFogFar
+                  )
                 )),
             (this.fogUpdate = !this.fogUpdate),
             Be.position.y < 0
@@ -9571,16 +9597,16 @@
                       (this.dynamicFogFar = 0.2 + 0.8 * this.dynamicFogNear),
                       K(
                         this.weather.col,
-                        pe * this.weather.fogNear * this.dynamicFogNear,
+                        viewDist * this.weather.fogNear * this.dynamicFogNear,
                         Math.max(
                           50,
-                          pe * this.weather.fogFar * this.dynamicFogFar
+                          viewDist * this.weather.fogFar * this.dynamicFogFar
                         )
                       ))
                     : K(
                         this.weather.col,
-                        pe * this.weather.fogNear,
-                        pe * this.weather.fogFar
+                        viewDist * this.weather.fogNear,
+                        viewDist * this.weather.fogFar
                       )));
         }
         smoothLerp(e) {
@@ -9699,16 +9725,16 @@
                 (this.dynamicFogFar = 0.2 + 0.8 * this.dynamicFogNear),
                 K(
                   this.weatherBlend.col.getHex(),
-                  pe * this.weatherBlend.fogNear * this.dynamicFogNear,
+                  viewDist * this.weatherBlend.fogNear * this.dynamicFogNear,
                   Math.max(
                     50,
-                    pe * this.weatherBlend.fogFar * this.dynamicFogFar
+                    viewDist * this.weatherBlend.fogFar * this.dynamicFogFar
                   )
                 ))
               : K(
                   this.weatherBlend.col.getHex(),
-                  pe * this.weatherBlend.fogNear,
-                  pe * this.weatherBlend.fogFar
+                  viewDist * this.weatherBlend.fogNear,
+                  viewDist * this.weatherBlend.fogFar
                 ),
             (Pe.userData.hasClouds.value = !1),
             Pe.userData.nearCol.value.copy(this.weatherBlend.skyCol),
@@ -9954,7 +9980,7 @@
               void 0 === i
                 ? void 0
                 : i.ambiance) || n.audio.ambiance;
-          D.getAudio(h.src, (e) => {
+          Audio.getAudio(h.src, (e) => {
             this.ambientAudio && this.ambientAudio.stop(),
               e.setLoop(!0),
               e.setLoopStart(h.ls),
@@ -9970,7 +9996,7 @@
             void 0 === a
               ? void 0
               : a.wind) || n.audio.wind;
-          D.getAudio(r.src, (e) => {
+          Audio.getAudio(r.src, (e) => {
             this.windAudio && this.windAudio.stop(),
               e.setLoop(!0),
               e.setLoopStart(r.ls),
@@ -9991,8 +10017,8 @@
             oe.setHex(this.weather.col),
             K(
               this.weather.col,
-              pe * this.weather.fogNear,
-              pe * this.weather.fogFar
+              viewDist * this.weather.fogNear,
+              viewDist * this.weather.fogFar
             ),
             (this.dynamicFog = !!this.weather.dynamicFog),
             this.cachedTextures[e] || (this.cachedTextures[e] = {});
@@ -10052,7 +10078,7 @@
               (this.compound = !1),
               (this.useQuick = !1);
             let t = e[1] || {};
-            (this.seed = e[0] || Ze),
+            (this.seed = e[0] || seed),
               (this.heightScale = t.heightScale || 1),
               (this.heightInitial = t.heightInitial || 1),
               (this.resolution = t.resolution || 5),
@@ -10813,7 +10839,7 @@
           }
           wh.push(wh[0]);
         };
-      uh(Y, U), bh();
+      uh(storedViewLodIndex, U), bh();
       var fh = dh;
       var yh = { rock: { src: i(35), obj: null } };
       var Ih = class {
@@ -11289,11 +11315,11 @@
             (this.segments.length = 0);
           do {
             this.updateGeneration();
-          } while (this.genIndex < Ke.vehicleIndex + Le);
+          } while (this.genIndex < Ke.vehicleIndex + wallGenHorizon);
           for (
             ;
             this.segments.length > 0 &&
-            Ke.vehicleIndex + Re >= this.segments[0].startNode.i;
+            Ke.vehicleIndex + wallRenderHorizon >= this.segments[0].startNode.i;
 
           )
             this.drawNextSegment();
@@ -11339,7 +11365,7 @@
           for (
             this.updateGeneration();
             this.segments.length > 0 &&
-            Ke.vehicleIndex + Re >= this.segments[0].startNode.i;
+            Ke.vehicleIndex + wallRenderHorizon >= this.segments[0].startNode.i;
 
           )
             this.drawNextSegment();
@@ -11824,7 +11850,7 @@
               ? void 0
               : i.ambiance) || n.audio.ambiance;
           null !== h.src &&
-            D.getAudio(h.src, (e) => {
+            Audio.getAudio(h.src, (e) => {
               this.ambientAudio && this.ambientAudio.stop(),
                 e.setLoop(!0),
                 e.setLoopStart(h.ls),
@@ -11842,7 +11868,7 @@
               ? void 0
               : a.wind) || n.audio.wind;
           null !== r.src &&
-            D.getAudio(r.src, (e) => {
+            Audio.getAudio(r.src, (e) => {
               e.setLoop(!0),
                 e.setLoopStart(r.ls),
                 e.setLoopEnd(e.buffer.duration - r.le),
@@ -11862,8 +11888,8 @@
             oe.setHex(this.weather.col),
             K(
               this.weather.col,
-              pe * this.weather.fogNear,
-              pe * this.weather.fogFar
+              viewDist * this.weather.fogNear,
+              viewDist * this.weather.fogFar
             ),
             this.cachedTextures[e] || (this.cachedTextures[e] = {});
           let o = this.cachedTextures[e],
@@ -11889,7 +11915,7 @@
         (sr.hasGrass = !1);
       const ar = { Hills: Nn, Planet: sr },
         nr = ["Hills", "Planet"],
-        hr = ["easy", "normal", "hard"],
+        difficulties = ["easy", "normal", "hard"],
         rr = [0.5, 0.75, 1, 1.5],
         or = {
           seed: "seed",
@@ -11903,7 +11929,7 @@
           renderScale: "config-render-scale",
         },
         lr = {
-          seed: Ze,
+          seed: seed,
           sceneName: "Hills",
           topography: "normal",
           skin: "default",
@@ -12323,13 +12349,13 @@
               axleHeight: 0.342665,
               dampening: 0.04,
               rockFactor: 4,
-              drag: 0.005,
+              drag: 0.0,
               topSpeed: 500,
               rollResistance: 0.06,
               steerInterval: 1,
               slipBase: 0.1,
               slipMod: 0.05,
-              aeroFactor: 0.4,
+              aeroFactor: 0.8,
               headlightPos: { x: 0.64, y: 0.7, z: 3.1 },
             },
             cameras: xr,
@@ -12600,7 +12626,7 @@
           if (!this.connected) return void (this.doInitialiseAnalytics = !0);
           let e = {
             sceneConfig: {
-              seed: Ze,
+              seed: seed,
               ...dr.value,
               initNode: dr.initialNode,
               accumProg: dr.accumulatedProgress,
@@ -12660,7 +12686,7 @@
                 (e.revisitCount++, (e.isRevisit = !0));
             } else e.revisitCount++, (e.isRevisit = !0);
           return (
-            (this.playerProfile = e), this.recordSeed(Ze), this.playerProfile
+            (this.playerProfile = e), this.recordSeed(seed), this.playerProfile
           );
         }
         recordSeed(e) {
@@ -12874,7 +12900,7 @@
         }
         loader() {
           if (!this.hasInitGeneration) {
-            if (Ke.tail.i < dr.initialNode + $) {
+            if (Ke.tail.i < dr.initialNode + midlineHorizon) {
               if (
                 (this.extendMidline() || this.generationResets++,
                 320 == this.antiTargetRevert ||
@@ -12924,20 +12950,23 @@
               this.smoothWindowHead = ho.n;
             }
             return (
-              Ke.tail.i - Ke.head.i > $ &&
+              Ke.tail.i - Ke.head.i > midlineHorizon &&
                 ((Ke.head = Ke.head.next),
                 delete Ke.head.prev,
                 (Ke.head.prev = null),
                 (Ke.vehicleNode = Ke.head)),
-              (Ke.tail.i / (dr.initialNode + $)) * 0.8
+              (Ke.tail.i / (dr.initialNode + midlineHorizon)) * 0.8
             );
           }
           return this.hasInitSmoothing
             ? this.hasInitDiscretisation
               ? void 0
-              : Ke.discretisedTail.i < Ke.vehicleIndex + ie
+              : Ke.discretisedTail.i < Ke.vehicleIndex + midlineFineHorizon
               ? (this.discretiseNext(),
-                0.9 + (Ke.discretisedTail.i / (Ke.vehicleIndex + ie)) * 0.0999)
+                0.9 +
+                  (Ke.discretisedTail.i /
+                    (Ke.vehicleIndex + midlineFineHorizon)) *
+                    0.0999)
               : ((this.hasInitDiscretisation = !0), 1)
             : (this.smoothWindowHead.i < Ke.tail.i - se
                 ? this.smoothHeight()
@@ -13104,7 +13133,7 @@
         }
         extendMidline() {
           if (((this.didExtend = !0), eo && this.lineIndex >= 15e4)) return;
-          for (ro.tracker of (Ke.tail.i > $ &&
+          for (ro.tracker of (Ke.tail.i > midlineHorizon &&
             Ke.tail.i - Ke.vehicleIndex < ee &&
             !this.allowEmergencyBridge &&
             !this.bridging &&
@@ -13685,16 +13714,16 @@
         }
         update() {
           return (
-            Ke.tail.i < Ke.vehicleIndex + $
+            Ke.tail.i < Ke.vehicleIndex + midlineHorizon
               ? (this.extendMidline(), this.smoothHeight())
-              : Ke.tail.i - Ke.head.i > $ &&
+              : Ke.tail.i - Ke.head.i > midlineHorizon &&
                 ((ho.n = Ke.head.next),
                 delete Ke.head,
                 (Ke.head = ho.n),
                 (Ke.head.prev = null)),
-            Ke.discretisedTail.i < Ke.vehicleIndex + ie
+            Ke.discretisedTail.i < Ke.vehicleIndex + midlineFineHorizon
               ? this.discretiseNext()
-              : Ke.discretisedTail.i - Ke.head.i > ie &&
+              : Ke.discretisedTail.i - Ke.head.i > midlineFineHorizon &&
                 ((ho.n = Ke.head.next),
                 delete Ke.head,
                 (Ke.head = ho.n),
@@ -14021,7 +14050,7 @@
             (this.maxTileIndex = this.tileCount - 1),
             (this.readyCount = 0),
             (this.drawCount = 0),
-            (this.retireIndex = ve),
+            (this.retireIndex = rearHorizon),
             (this.geo = new po(e, t, this.tileCount)),
             (this.mesh = new r.B(this.geo, a)),
             (this.showHeight = new Float32Array((t + 1) * (t + 1))),
@@ -14042,7 +14071,7 @@
         }
         reset() {
           (this.nextTileIndex = 0),
-            (this.retireIndex = ve),
+            (this.retireIndex = rearHorizon),
             (this.readyCount = 0),
             (this.drawCount = 0),
             (this.indexCallbacks.length = 0),
@@ -14059,7 +14088,7 @@
           this.origin.copy(e), this.mesh.position.copy(this.origin);
         }
         setRetireIndex(e) {
-          this.retireIndex = Math.max(this.retireIndex, e + ve);
+          this.retireIndex = Math.max(this.retireIndex, e + rearHorizon);
         }
         tileReady(e, t, i, s, a, n, h, r) {
           this.posArr.set(t, e * t.length),
@@ -14109,7 +14138,7 @@
               {
                 res: me,
                 node: null,
-                horizon: xe,
+                horizon: fwdHorizon,
                 tileSize: 5,
                 tiles: Math.floor(2.5),
                 prevCheck: { x: 0, z: 0 },
@@ -14117,7 +14146,7 @@
               {
                 res: be,
                 node: null,
-                horizon: fe,
+                horizon: nearFwdHorizon,
                 tileSize: 3,
                 tiles: Math.floor(1.5),
                 prevCheck: { x: 0, z: 0 },
@@ -14169,7 +14198,7 @@
             {
               res: me,
               node: null,
-              horizon: xe,
+              horizon: fwdHorizon,
               tileSize: 5,
               tiles: Math.floor(2.5),
               prevCheck: { x: 0, z: 0 },
@@ -14177,7 +14206,7 @@
             {
               res: be,
               node: null,
-              horizon: fe,
+              horizon: nearFwdHorizon,
               tileSize: 3,
               tiles: Math.floor(1.5),
               prevCheck: { x: 0, z: 0 },
@@ -14280,7 +14309,7 @@
           if (
             i.length &&
             (i[i.length - 1].retired ||
-              this.seenIndex - i[i.length - 1].originIndex > ye)
+              this.seenIndex - i[i.length - 1].originIndex > rearHorizon2)
           ) {
             var s, a;
             let e = i.pop();
@@ -14546,7 +14575,8 @@
             : 1;
         }
         initialise() {
-          (mo = Math.min((le / 10) * 2.5, 990)), (xo = Math.max(10, mo / 4));
+          (mo = Math.min((farSize / 10) * 2.5, 990)),
+            (xo = Math.max(10, mo / 4));
           let e = Object.keys(wo);
           for (let i of e) delete wo[i];
           let t = Object.keys(bo);
@@ -14604,8 +14634,8 @@
         }
         checkActiveCell(e, t) {
           var i, s;
-          let a = Math.floor(e / le),
-            n = Math.floor(t / le);
+          let a = Math.floor(e / farSize),
+            n = Math.floor(t / farSize);
           return !!(null === (i = this.loadedCells[a]) ||
           void 0 === i ||
           null === (s = i[n]) ||
@@ -14661,8 +14691,8 @@
             o = Math.floor(2);
           for (let l = -o; l <= o; l++)
             for (let d = -o; d <= o; d++)
-              (i = ((e + l) * Ae) / le),
-                (s = ((t + d) * Ae) / le),
+              (i = ((e + l) * Ae) / farSize),
+                (s = ((t + d) * Ae) / farSize),
                 (a = Math.floor(i)),
                 (n = Math.floor(s)),
                 (h = (e + l) % de),
@@ -14687,7 +14717,7 @@
         }
         updateOverlapRedraw() {
           for (
-            yo.fz2 = le / 2, yo.oci = this.overlapRedrawTiles.length - 1;
+            yo.fz2 = farSize / 2, yo.oci = this.overlapRedrawTiles.length - 1;
             yo.oci >= 0;
             yo.oci--
           ) {
@@ -14765,8 +14795,8 @@
             if (0 != yo.dx)
               (a = this.overlapCheckNode.p.x + yo.dx * r * Ae),
                 (n = this.overlapCheckNode.p.z + h * Ae),
-                (e = Math.floor(a / le)),
-                (t = Math.floor(n / le)),
+                (e = Math.floor(a / farSize)),
+                (t = Math.floor(n / farSize)),
                 e in this.seenCells || (this.seenCells[e] = {}),
                 (this.seenCells[e][t] = this.overlapCheckNode.i),
                 (null === (o = this.loadedCells[e]) || void 0 === o
@@ -14775,14 +14805,14 @@
                   !this.loadedCells[e][t].needsOverlapRedraw &&
                   ((this.loadedCells[e][t].needsOverlapRedraw = !0),
                   this.overlapRedrawTiles.push([e, t])),
-                (i = Math.floor((a - e * le) / Ae)),
-                (s = Math.floor((n - t * le) / Ae)),
+                (i = Math.floor((a - e * farSize) / Ae)),
+                (s = Math.floor((n - t * farSize) / Ae)),
                 this.applyTileOverlap(e, t, i, s, -1);
             if (0 !== yo.dz)
               (a = this.overlapCheckNode.p.x + h * Ae),
                 (n = this.overlapCheckNode.p.z + yo.dz * r * Ae),
-                (e = Math.floor(a / le)),
-                (t = Math.floor(n / le)),
+                (e = Math.floor(a / farSize)),
+                (t = Math.floor(n / farSize)),
                 e in this.seenCells || (this.seenCells[e] = {}),
                 (this.seenCells[e][t] = this.overlapCheckNode.i),
                 (null === (l = this.loadedCells[e]) || void 0 === l
@@ -14791,20 +14821,20 @@
                   !this.loadedCells[e][t].needsOverlapRedraw &&
                   ((this.loadedCells[e][t].needsOverlapRedraw = !0),
                   this.overlapRedrawTiles.push([e, t])),
-                (i = Math.floor((a - e * le) / Ae)),
-                (s = Math.floor((n - t * le) / Ae)),
+                (i = Math.floor((a - e * farSize) / Ae)),
+                (s = Math.floor((n - t * farSize) / Ae)),
                 this.applyTileOverlap(e, t, i, s, -1);
           }
           for (r -= 1, h = -r; h <= r; h++)
             0 != yo.dx &&
               ((a = this.overlapCheckNode.p.x + yo.dx * r * Ae),
               (n = this.overlapCheckNode.p.z + h * Ae),
-              (e = Math.floor(a / le)),
-              (t = Math.floor(n / le)),
+              (e = Math.floor(a / farSize)),
+              (t = Math.floor(n / farSize)),
               e in this.seenCells || (this.seenCells[e] = {}),
               (this.seenCells[e][t] = this.overlapCheckNode.i),
-              (i = Math.floor((a - e * le) / Ae)),
-              (s = Math.floor((n - t * le) / Ae)),
+              (i = Math.floor((a - e * farSize) / Ae)),
+              (s = Math.floor((n - t * farSize) / Ae)),
               this.applyTileOverlap(
                 e,
                 t,
@@ -14815,12 +14845,12 @@
               0 !== yo.dz &&
                 ((a = this.overlapCheckNode.p.x + h * Ae),
                 (n = this.overlapCheckNode.p.z + yo.dz * r * Ae),
-                (e = Math.floor(a / le)),
-                (t = Math.floor(n / le)),
+                (e = Math.floor(a / farSize)),
+                (t = Math.floor(n / farSize)),
                 e in this.seenCells || (this.seenCells[e] = {}),
                 (this.seenCells[e][t] = this.overlapCheckNode.i),
-                (i = Math.floor((a - e * le) / Ae)),
-                (s = Math.floor((n - t * le) / Ae)),
+                (i = Math.floor((a - e * farSize) / Ae)),
+                (s = Math.floor((n - t * farSize) / Ae)),
                 this.applyTileOverlap(
                   e,
                   t,
@@ -15008,13 +15038,17 @@
             this.seenIndex++);
         }
         getCoords(e) {
-          return { x: Math.floor(e.x / le), y: 0, z: Math.floor(e.z / le) };
+          return {
+            x: Math.floor(e.x / farSize),
+            y: 0,
+            z: Math.floor(e.z / farSize),
+          };
         }
         getOrigin(e) {
           return {
-            x: Math.floor(e.x / le) * le,
+            x: Math.floor(e.x / farSize) * farSize,
             y: 0,
-            z: Math.floor(e.z / le) * le,
+            z: Math.floor(e.z / farSize) * farSize,
           };
         }
         getCell() {
@@ -15026,7 +15060,7 @@
       }
       var Do = new (class {
         constructor() {
-          (this.arng = new window.alea(Ze)),
+          (this.arng = new window.alea(seed)),
             (this.container = new r.G()),
             (this.scene = null),
             (this.envLayer = new r.G()),
@@ -15061,7 +15095,7 @@
             dr.addListener("skin", this.setSceneSkinBound),
             dr.addListener("weatherIndex", this.setSceneWeatherIndexBound),
             this.container.add(this.envLayer),
-            J(dr.value.viewLodIndex),
+            setRenderLevel(dr.value.viewLodIndex),
             q(dr.value.detailLodIndex);
         }
         nextSkin() {
@@ -15099,7 +15133,7 @@
             (this.scene = new t(this.getNearGridHeightAt.bind(this))),
             this.envLayer.add(this.scene.container),
             this.scene.sanitiseConfig(dr),
-            this.scene.initialise(Ze, dr.value, () => this.onSceneReady());
+            this.scene.initialise(seed, dr.value, () => this.onSceneReady());
         }
         onSceneReady() {
           (this.loadProg = 0),
@@ -15110,7 +15144,7 @@
               this.midline.destroy()),
             (this.midline = new oo()),
             this.getOriginPose(),
-            this.midline.initialise(Ze, this.heightmap, this.vehicleOrigin),
+            this.midline.initialise(seed, this.heightmap, this.vehicleOrigin),
             (this.midlineAttempts = 0),
             Jr.sendUpdate("skinChange", this.scene.getSkinName(dr.value.skin));
         }
@@ -15129,7 +15163,7 @@
         }
         _topographyReset() {
           (this.sceneReady = !1),
-            this.scene.reset(Ze, dr.value, () => this.onSceneReady);
+            this.scene.reset(seed, dr.value, () => this.onSceneReady);
         }
         _topographyLoader() {
           return this.sceneReady ? this.buildMidline() : 0;
@@ -15153,7 +15187,7 @@
           );
         }
         _updateConfig() {
-          J(dr.value.viewLodIndex),
+          setRenderLevel(dr.value.viewLodIndex),
             q(dr.value.detailLodIndex),
             this.scene.updateConfig(
               dr.value.viewLodIndex,
@@ -15238,7 +15272,7 @@
                       this.vehicleOrigin.x + this.vehicleOrigin.z > 1e6
                         ? void Qe(Date.now(), !0)
                         : (this.midline.initialise(
-                            Ze,
+                            seed,
                             this.heightmap,
                             this.vehicleOrigin
                           ),
@@ -15296,7 +15330,7 @@
           return s || this.heightmap.getXZ(e.x, e.z, i);
         }
         getOriginPose(e = 0) {
-          let t = new window.alea(Ze),
+          let t = new window.alea(seed),
             i = 0 + 500 * e,
             s = 500 * e,
             a = this.getHeightAt(i, s),
@@ -15437,7 +15471,7 @@
             (this.randFrame = !1),
             (this.onViewChange = e),
             (this.camera = Be),
-            this.camera.add(D.listener),
+            this.camera.add(Audio.listener),
             z.addListener(M, this.reset.bind(this)),
             z.addListener(N, this.initVehicleAngles.bind(this)),
             window.localStorage.getItem(jo))
@@ -15470,7 +15504,7 @@
             this.reset();
         }
         updateViewDist() {
-          (this.camera.far = pe), this.camera.updateProjectionMatrix();
+          (this.camera.far = viewDist), this.camera.updateProjectionMatrix();
         }
         reset() {
           let e = 0;
@@ -15498,13 +15532,13 @@
             this.onViewChange();
         }
         update(e) {
-          p.key[u.Camera] &&
+          p.key[keyMap.Camera] &&
             ((this.modeIndex = (this.modeIndex + 1) % No.length),
             (this.mode = Mo[No[this.modeIndex]]),
             window.localStorage.setItem(jo, this.modeIndex),
             this.reset(),
             Jr.sendUpdate("cameraChange", No[this.modeIndex]),
-            (p.key[u.Camera] = !1)),
+            (p.key[keyMap.Camera] = !1)),
             (this.uLerpA = this.smoothLerp(z.speed / this.mode.farSpeed)),
             (this.uLerpB = 1 - this.uLerpA),
             (this.uSmoothA = Math.min(e / (k * this.mode.smoothFactor), 1)),
@@ -15648,7 +15682,7 @@
               this.lockChangeAlertBound,
               !1
             ),
-            this.camera.add(D.listener),
+            this.camera.add(Audio.listener),
             (this.debug = new r.B(
               new r.Q(2, 32, 16),
               new r.C({ color: 110832 })
@@ -15673,7 +15707,7 @@
               this.curZoom);
         }
         updateViewDist() {
-          (this.camera.far = pe), this.camera.updateProjectionMatrix();
+          (this.camera.far = viewDist), this.camera.updateProjectionMatrix();
         }
         reset() {
           this.camContainer.position.copy(z.position),
@@ -15695,14 +15729,14 @@
         }
         update(e) {
           if (
-            (p.key[u.Camera] &&
+            (p.key[keyMap.Camera] &&
               ((this.camera.far = 1e4),
               this.camera.updateProjectionMatrix(),
-              (p.key[u.Camera] = !1)),
-            p.key[u.StickySteer] &&
-              ((p.key[u.StickySteer] = !1),
+              (p.key[keyMap.Camera] = !1)),
+            p.key[keyMap.StickySteer] &&
+              ((p.key[keyMap.StickySteer] = !1),
               (this.matchSpeed = !this.matchSpeed)),
-            p.key[u.NodeDebug])
+            p.key[keyMap.NodeDebug])
           ) {
             let e = Je(
                 this.camContainer.position.x,
@@ -15717,7 +15751,7 @@
               );
             console.log("Near node is " + t.n.i + " at dist " + t.d),
               this.debug.position.copy(t.n.p),
-              (p.key[u.NodeDebug] = !1);
+              (p.key[keyMap.NodeDebug] = !1);
           }
           this.matchSpeed
             ? (this.targetSpeed = Math.max(1, z.speed))
@@ -15726,20 +15760,20 @@
             this.posVec.set(0, 0, 0),
             (this.dir.x = 0),
             (this.hadInput = !1),
-            p.key[u.Forward] &&
+            p.key[keyMap.Forward] &&
               ((this.hadInput = !0),
               (this.posVec.x -= e * this.speed * this.sX),
               (this.posVec.z -= e * this.speed * this.sZ)),
-            p.key[u.Backward] &&
+            p.key[keyMap.Backward] &&
               ((this.hadInput = !0),
               (this.posVec.x += e * this.speed * this.sX),
               (this.posVec.z += e * this.speed * this.sZ)),
             (this.dir.z = 0),
-            p.key[u.Left] &&
+            p.key[keyMap.Left] &&
               ((this.hadInput = !0),
               (this.posVec.x -= e * this.speed * this.sZ),
               (this.posVec.z += e * this.speed * this.sX)),
-            p.key[u.Right] &&
+            p.key[keyMap.Right] &&
               ((this.hadInput = !0),
               (this.posVec.x += e * this.speed * this.sZ),
               (this.posVec.z -= e * this.speed * this.sX)),
@@ -15752,25 +15786,25 @@
               !this.matchSpeed &&
               (this.targetSpeed = this.baseSpeed),
             this.hadElev && (this.targetElevSpeed = this.baseElevSpeed),
-            p.key[u.BoostAccel] && (this.targetSpeed *= 2),
+            p.key[keyMap.BoostAccel] && (this.targetSpeed *= 2),
             (this.speed = 0.9 * this.speed + 0.1 * this.targetSpeed),
             (this.elevSpeed =
               0.95 * this.elevSpeed + 0.05 * this.targetElevSpeed),
             (this.hadRot = !1),
             (this.targetRotSpeed = 0),
-            p.key[u.LeftArrow]
+            p.key[keyMap.LeftArrow]
               ? ((this.hadRot = !0), (this.targetRotY += e * this.rotSpeed))
-              : p.key[u.RightArrow] &&
+              : p.key[keyMap.RightArrow] &&
                 ((this.hadRot = !0), (this.targetRotY -= e * this.rotSpeed)),
-            p.key[u.UpArrow]
+            p.key[keyMap.UpArrow]
               ? ((this.hadRot = !0),
                 (this.targetRotX -= e * this.rotSpeed * 0.5))
-              : p.key[u.DownArrow] &&
+              : p.key[keyMap.DownArrow] &&
                 ((this.hadRot = !0),
                 (this.targetRotX += e * this.rotSpeed * 0.5)),
             this.hadRot &&
               (this.targetRotSpeed = (1 * this.baseRotSpeed) / this.curZoom),
-            p.key[u.Num1] && (this.targetRotSpeed *= 2),
+            p.key[keyMap.Num1] && (this.targetRotSpeed *= 2),
             (this.rotSpeed = 0.98 * this.rotSpeed + 0.02 * this.targetRotSpeed),
             (this.camContainer.rotation.x =
               this.camContainer.rotation.x * (1 - this.rotSmooth) +
@@ -15791,8 +15825,8 @@
             this.curZoom != this.camera.zoom &&
               ((this.camera.zoom = this.curZoom),
               this.camera.updateProjectionMatrix()),
-            p.key[u.T] &&
-              ((p.key[u.T] = !1),
+            p.key[keyMap.T] &&
+              ((p.key[keyMap.T] = !1),
               (this.track = !this.track),
               this.track ||
                 ((this.camera.rotation.x = 0),
@@ -15802,7 +15836,8 @@
               (this.trackPosition.copy(z.frontAxlePosition),
               (this.trackPosition.y += 0.5),
               this.camContainer.lookAt(this.trackPosition)),
-            p.key[u.ResetCamera] && (this.reset(), (p.key[u.ResetCamera] = !1)),
+            p.key[keyMap.ResetCamera] &&
+              (this.reset(), (p.key[keyMap.ResetCamera] = !1)),
             this.camera.getWorldDirection(this.camFwd),
             this.targetPosition.add(this.posVec),
             this.camContainer.position.lerp(
@@ -15857,7 +15892,7 @@
             (this.sound = null),
             this.loadAchievements(),
             (this.hasLoaded = !0),
-            D.getAudio(Lo, (e) => {
+            Audio.getAudio(Lo, (e) => {
               this.sound = e;
             });
         }
@@ -15879,7 +15914,7 @@
         Bo = () => ({ personal: Eo(), global: { daily: Eo(), allTime: Eo() } }),
         Eo = () => {
           let e = {};
-          for (let t of hr) {
+          for (let t of difficulties) {
             e[t] = {};
             for (let i of Go) e[t][i] = -1;
           }
@@ -16213,7 +16248,7 @@
         }
         loadHit(e) {
           this.soundCount++,
-            D.getPositionalAudio(
+            Audio.getPositionalAudio(
               Al.hits[e],
               (t) => {
                 (this.worldSounds.hits[e] = t),
@@ -16232,7 +16267,7 @@
         loadWorldSounds() {
           for (let e = 0; e < Al.hits.length; e++) this.loadHit(e);
           this.soundCount++,
-            D.getPositionalAudio(Al.scrape, (e) => {
+            Audio.getPositionalAudio(Al.scrape, (e) => {
               this.worldSounds.scrape &&
                 (this.worldSounds.scrape.stop(),
                 z.remove(this.worldSounds.scrape)),
@@ -16251,7 +16286,7 @@
         }
         loadTyre(e, t) {
           (this.soundCount += 4),
-            D.getPositionalAudio(
+            Audio.getPositionalAudio(
               gl.tyre,
               (i) => {
                 this.sounds.tyres[e] && this.sounds.tyres[e].stop(),
@@ -16272,7 +16307,7 @@
               },
               this.sounds.tyres[e]
             ),
-            D.getPositionalAudio(
+            Audio.getPositionalAudio(
               gl.roll,
               (i) => {
                 this.sounds.rolls[e] && this.sounds.rolls[e].stop(),
@@ -16293,7 +16328,7 @@
               },
               this.sounds.rolls[e]
             ),
-            D.getPositionalAudio(
+            Audio.getPositionalAudio(
               gl.offroad,
               (i) => {
                 this.sounds.offroads[e] && this.sounds.offroads[e].stop(),
@@ -16315,7 +16350,7 @@
               },
               this.sounds.offroads[e]
             ),
-            D.getPositionalAudio(
+            Audio.getPositionalAudio(
               gl.sus,
               (i) => {
                 this.sounds.sus[e] && this.sounds.sus[e].stop(),
@@ -16339,7 +16374,7 @@
         }
         loadSound(e, t) {
           this.soundCount++,
-            D.getPositionalAudio(
+            Audio.getPositionalAudio(
               t,
               (t) => {
                 var i;
@@ -16936,11 +16971,13 @@
             (Sr.dist =
               10 * (Ke.vehicleNode.i - Ke.initIndex + dr.accumulatedProgress)),
             dr.addListener("weatherIndex", () => this.updateHeadlights()),
-            p.addListener(u.Headlights, () =>
+            p.addListener(keyMap.Headlights, () =>
               z.setHeadlights(!z.headlights, !0)
             ),
-            p.addListener(u.Lights, () => z.setHeadlights(!z.headlights, !0)),
-            p.addListener(u.AutoDrive, () => {
+            p.addListener(keyMap.Lights, () =>
+              z.setHeadlights(!z.headlights, !0)
+            ),
+            p.addListener(keyMap.AutoDrive, () => {
               this.canToggleAutodrive &&
                 (y.set(!this.autodrive), (this.canToggleAutodrive = !1));
             }),
@@ -18019,7 +18056,7 @@
             0 != p.scrollDelta &&
               null != Rr.value &&
               (p.scrollDelta < 0 ? Rr.inc5() : Rr.dec5()),
-            (this.canToggleAutodrive = !p.key[u.AutoDrive]),
+            (this.canToggleAutodrive = !p.key[keyMap.AutoDrive]),
             (this.inputDisabled && !this.autodrive) ||
               (this.autodrive
                 ? (this.autoDriver.update(e),
@@ -18043,14 +18080,14 @@
                       (Cl.redlight.emissiveIntensity = jl))
                     : ((z.braking = !1), (Cl.redlight.emissiveIntensity = 0)),
                   !this.useMouse &&
-                  (p.key[u.Left] ||
-                    p.key[u.LeftArrow] ||
-                    p.key[u.Forward] ||
-                    p.key[u.UpArrow] ||
-                    p.key[u.Right] ||
-                    p.key[u.RightArrow] ||
-                    p.key[u.Backward] ||
-                    p.key[u.DownArrow])
+                  (p.key[keyMap.Left] ||
+                    p.key[keyMap.LeftArrow] ||
+                    p.key[keyMap.Forward] ||
+                    p.key[keyMap.UpArrow] ||
+                    p.key[keyMap.Right] ||
+                    p.key[keyMap.RightArrow] ||
+                    p.key[keyMap.Backward] ||
+                    p.key[keyMap.DownArrow])
                     ? this.canCancelAutodrive &&
                       !this.inputDisabled &&
                       y.set(!1)
@@ -18115,14 +18152,14 @@
                     1 - (z.speed / z.metrics.topSpeed) * 0.4))
                 : ((this.hasBoost =
                     this.hasBoost && (this.hasAccel || null !== Rr.value)),
-                  p.key[u.Forward] || p.key[u.UpArrow]
+                  p.key[keyMap.Forward] || p.key[keyMap.UpArrow]
                     ? (this.hasAccel ||
                         0 != w.DoubleTap ||
                         ((this.hasBoost =
                           !this.hasAccel && f.appTime - this.lastAccel < 0.15),
                         (this.boostFromTap = this.hasBoost)),
                       this.boostFromTap ||
-                        (this.hasBoost = !!p.key[u.BoostAccel]),
+                        (this.hasBoost = !!p.key[keyMap.BoostAccel]),
                       Xo.Boost && this.hasBoost && Jo("Boost"),
                       (this.hasAccel = !0),
                       (this.lastAccel = f.appTime),
@@ -18133,7 +18170,7 @@
                           (Cl.redlight.emissiveIntensity = 0),
                           (this.inputs.accel = z.metrics.accel)),
                       (this.holdHandbrake = !1))
-                    : p.key[u.Backward] || p.key[u.DownArrow]
+                    : p.key[keyMap.Backward] || p.key[keyMap.DownArrow]
                     ? ((this.hasAccel = !1),
                       z.direction > 0
                         ? (z.braking || (z.brakeLerp = 0),
@@ -18147,24 +18184,25 @@
                       (z.braking = !1),
                       (Cl.redlight.emissiveIntensity = 0)),
                   (this.inputs.steer = 0),
-                  (p.key[u.Left] || p.key[u.LeftArrow]) &&
+                  (p.key[keyMap.Left] || p.key[keyMap.LeftArrow]) &&
                     (this.inputs.steer += 1),
-                  (p.key[u.Right] || p.key[u.RightArrow]) &&
+                  (p.key[keyMap.Right] || p.key[keyMap.RightArrow]) &&
                     (this.inputs.steer -= 1),
-                  (this.inputs.stiffSteer = p.key[u.StickySteer]),
+                  (this.inputs.stiffSteer = p.key[keyMap.StickySteer]),
                   this.inputs.stiffSteer &&
-                    p.key[u.Handbrake] &&
+                    p.key[keyMap.Handbrake] &&
                     !this.inputs.handbrake &&
                     (this.holdHandbrake = !0),
-                  (this.inputs.handbrake = !z.bike && p.key[u.Handbrake]),
+                  (this.inputs.handbrake = !z.bike && p.key[keyMap.Handbrake]),
                   (z.handbrake =
-                    (!z.bike && p.key[u.Handbrake]) || this.holdHandbrake)),
+                    (!z.bike && p.key[keyMap.Handbrake]) ||
+                    this.holdHandbrake)),
               null === Rr.value ||
                 this.autodrive ||
                 z.braking ||
                 z.handbrake ||
                 (0 != this.inputs.accel && !this.useMouse) ||
-                (this.useMouse || (this.hasBoost = !!p.key[u.BoostAccel]),
+                (this.useMouse || (this.hasBoost = !!p.key[keyMap.BoostAccel]),
                 this.inputs.accel >= 0 &&
                   Rr.value - z.speed > 0 &&
                   (this.inputs.accel = Math.min(
@@ -18182,23 +18220,23 @@
                   z.speed < 27 &&
                   (this.inputs.accel +=
                     z.metrics.accel * Math.max(0, 0.5 * (1 - z.speed / 27))),
-              p.key[u.Reset]
+              p.key[keyMap.Reset]
                 ? (this.resetToNode(Ke.vehicleNode),
                   Xo.Reset && Jo("Reset"),
-                  (p.key[u.Reset] = !1),
+                  (p.key[keyMap.Reset] = !1),
                   this.analytics.resetCount++,
                   Jr.sendUpdate("resetCount", this.analytics.resetCount),
                   (this.holdHandbrake = null == Rr.value))
                 : c &&
-                  (p.key[u.PageUp] && Ke.vehicleNode.next
+                  (p.key[keyMap.PageUp] && Ke.vehicleNode.next
                     ? (this.resetToNode(Ke.vehicleNode.next),
                       (this.holdHandbrake = !0),
-                      (p.key[u.PageUp] = !1))
-                    : p.key[u.PageDown] &&
+                      (p.key[keyMap.PageUp] = !1))
+                    : p.key[keyMap.PageDown] &&
                       Ke.vehicleNode.prev &&
                       (this.resetToNode(Ke.vehicleNode.prev),
                       (this.holdHandbrake = !0),
-                      (p.key[u.PageDown] = !1))),
+                      (p.key[keyMap.PageDown] = !1))),
               this.autodrive
                 ? ((z.steer = this.inputs.steer), z.updateSteer())
                 : this.getSoggySteerState(e),
@@ -18441,8 +18479,8 @@
             (this.initialised = !1),
             (this.showCamPos = !1),
             (this.updateBound = this.update.bind(this)),
-            p.addListener(u.Debug, this.toggleActive.bind(this)),
-            p.addListener(u.Debug2, () => {
+            p.addListener(keyMap.Debug, this.toggleActive.bind(this)),
+            p.addListener(keyMap.Debug2, () => {
               this.showCamPos = !this.showCamPos;
             });
         }
@@ -18505,8 +18543,8 @@
               "z");
           let s,
             a,
-            n = e / le,
-            h = i / le;
+            n = e / farSize,
+            h = i / farSize;
           (s = Math.floor((n - Math.floor(n)) * de)),
             (a = Math.floor((h - Math.floor(h)) * de)),
             (n = Math.floor(n)),
@@ -18559,20 +18597,22 @@
               this.initScene(e),
               f.addStateListener(this.onTickerStateBound),
               p.init(t),
-              p.addListener(u.NodeDebug, () => console.log(Ke.vehicleNode)),
-              p.addListener(u.Mute, () => {
+              p.addListener(keyMap.NodeDebug, () =>
+                console.log(Ke.vehicleNode)
+              ),
+              p.addListener(keyMap.Mute, () => {
                 c &&
                   (null == this.scene.fog
                     ? (this.scene.fog = new r.q(16448255, 25e-5))
                     : (this.scene.fog = null)),
-                  D.toggleMute();
+                  Audio.toggleMute();
               }),
-              p.addListener(u.CameraToggle, () => this.toggleCamera()),
-              p.addListener(u.E, () => {
-                this.isCineCam || ((p.key[u.E] = !1), Do.nextSkin());
+              p.addListener(keyMap.CameraToggle, () => this.toggleCamera()),
+              p.addListener(keyMap.E, () => {
+                this.isCineCam || ((p.key[keyMap.E] = !1), Do.nextSkin());
               }),
-              p.addListener(u.Q, () => {
-                this.isCineCam || ((p.key[u.Q] = !1), Do.prevSkin());
+              p.addListener(keyMap.Q, () => {
+                this.isCineCam || ((p.key[keyMap.Q] = !1), Do.prevSkin());
               }),
               dr.addListener("seed", () => {
                 Jr.recordSeed(dr.value.seed), this.regenerateAll();
@@ -18821,7 +18861,7 @@
             this.vehicleController.resetToNode(Ke.vehicleNode);
           }
           onAudioInit() {
-            D.init(),
+            Audio.init(),
               window.removeEventListener("keydown", this.onAudioInitBound),
               window.removeEventListener("mousedown", this.onAudioInitBound);
           }
@@ -19938,13 +19978,13 @@
           }),
         Qd = () => {
           const [e, t] = Object(s.useState)(!1),
-            [i, a] = Object(s.useState)(Ze),
+            [i, a] = Object(s.useState)(seed),
             [n, h] = Object(s.useState)(dr.value.sceneName),
             [r, o] = Object(s.useState)(dr.value.topography),
             [l, d] = Object(s.useState)(!1),
             [c, p] = Object(s.useState)(!1),
             [u, g] = Object(s.useState)(!1),
-            [A, m] = Object(s.useState)(Ze),
+            [A, m] = Object(s.useState)(seed),
             [x, v] = Object(s.useState)(dr.value.sceneName),
             [w, b] = Object(s.useState)(dr.value.topography),
             [f, y] = Object(s.useState)(!1);
@@ -20008,8 +20048,8 @@
                             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAAA8CAYAAAC9xKUYAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGymlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDUgNzkuMTYzNDk5LCAyMDE4LzA4LzEzLTE2OjQwOjIyICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdEV2dD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlRXZlbnQjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOSAoV2luZG93cykiIHhtcDpDcmVhdGVEYXRlPSIyMDIyLTA3LTIwVDE4OjI2OjUwKzAxOjAwIiB4bXA6TWV0YWRhdGFEYXRlPSIyMDIyLTA3LTIwVDIyOjI0OjE5KzAxOjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyMi0wNy0yMFQyMjoyNDoxOSswMTowMCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpkOGQzZTNhOC1lZTRkLWRmNDYtOTc0MS00YThkOGZmNDVmYjYiIHhtcE1NOkRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDo2MDk3Y2Y0Zi01MzRhLTA5NGMtYjg1MS03NDAzODQ1NjM5YjciIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkN2RiZGM1Zi02OTcwLWYyNGQtOGVjYi1kY2U0NDQ1NWNmMTgiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIiBwaG90b3Nob3A6SUNDUHJvZmlsZT0ic1JHQiBJRUM2MTk2Ni0yLjEiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmQ3ZGJkYzVmLTY5NzAtZjI0ZC04ZWNiLWRjZTQ0NDU1Y2YxOCIgc3RFdnQ6d2hlbj0iMjAyMi0wNy0yMFQxODoyNjo1MCswMTowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKFdpbmRvd3MpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo1YmUwMzA0Ni0yYjU5LWQ3NDUtOTE1Mi00YTIzMmNiMWIyNDciIHN0RXZ0OndoZW49IjIwMjItMDctMjBUMTg6MjY6NTArMDE6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE5IChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6ZDhkM2UzYTgtZWU0ZC1kZjQ2LTk3NDEtNGE4ZDhmZjQ1ZmI2IiBzdEV2dDp3aGVuPSIyMDIyLTA3LTIwVDIyOjI0OjE5KzAxOjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOSAoV2luZG93cykiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+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",
                             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARgAAAA8CAYAAAC9xKUYAAAACXBIWXMAAAsTAAALEwEAmpwYAAAGymlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDUgNzkuMTYzNDk5LCAyMDE4LzA4LzEzLTE2OjQwOjIyICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOnhtcE1NPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvbW0vIiB4bWxuczpzdEV2dD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL3NUeXBlL1Jlc291cmNlRXZlbnQjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOSAoV2luZG93cykiIHhtcDpDcmVhdGVEYXRlPSIyMDIyLTA3LTIwVDE4OjI2OjUwKzAxOjAwIiB4bXA6TWV0YWRhdGFEYXRlPSIyMDIyLTA3LTIwVDIyOjIzOjI2KzAxOjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyMi0wNy0yMFQyMjoyMzoyNiswMTowMCIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpmMjI5ZmVhYS1kM2Q5LTI3NDktOTMxYy1hOTcxZmNiNGUwMzkiIHhtcE1NOkRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDowMWQxODExZC1hNjczLTc5NDctOGU1ZS0yYTc5OWE4MjVlMzUiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkN2RiZGM1Zi02OTcwLWYyNGQtOGVjYi1kY2U0NDQ1NWNmMTgiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIiBwaG90b3Nob3A6SUNDUHJvZmlsZT0ic1JHQiBJRUM2MTk2Ni0yLjEiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOmQ3ZGJkYzVmLTY5NzAtZjI0ZC04ZWNiLWRjZTQ0NDU1Y2YxOCIgc3RFdnQ6d2hlbj0iMjAyMi0wNy0yMFQxODoyNjo1MCswMTowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKFdpbmRvd3MpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo1YmUwMzA0Ni0yYjU5LWQ3NDUtOTE1Mi00YTIzMmNiMWIyNDciIHN0RXZ0OndoZW49IjIwMjItMDctMjBUMTg6MjY6NTArMDE6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE5IChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6ZjIyOWZlYWEtZDNkOS0yNzQ5LTkzMWMtYTk3MWZjYjRlMDM5IiBzdEV2dDp3aGVuPSIyMDIyLTA3LTIwVDIyOjIzOjI2KzAxOjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOSAoV2luZG93cykiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+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",
                           ],
-                          selectedIndex: hr.indexOf(w),
-                          onSelectIndex: (e) => b(hr[e]),
+                          selectedIndex: difficulties.indexOf(w),
+                          onSelectIndex: (e) => b(difficulties[e]),
                         }),
                         Object(Ul.jsx)("div", {
                           className: "menu-panel-row menu-panel-title",
@@ -20047,7 +20087,7 @@
                                   ? (dr.set("topography", w, !0),
                                     dr.set("sceneName", x))
                                   : dr.set("topography", w),
-                                a(Ze),
+                                a(seed),
                                 o(w),
                                 h(x));
                             },
@@ -20103,7 +20143,7 @@
                   p.lockKeys();
                 },
                 onBlur: () => {
-                  n || a(Ze), p.unlockKeys();
+                  n || a(seed), p.unlockKeys();
                 },
               }),
             })
@@ -20143,7 +20183,9 @@
                           style: t
                             ? { backgroundImage: "url(" + t[i] + ")" }
                             : {},
-                          onClick: () => a(i),
+                          onClick: () => {
+                            a(i);
+                          },
                           children: e,
                         },
                         "option-" + e
@@ -20534,7 +20576,7 @@
                             children: "view distance",
                           }),
                           Object(Ul.jsx)(Vd, {
-                            options: ["low", "med", "high", "ultra"],
+                            options: ["low", "med", "high", "ultra", "ultra+"],
                             selectedIndex: i,
                             onSelectIndex: (e) => dr.set("viewLodIndex", e),
                           }),
@@ -21698,18 +21740,18 @@
             }, [r, h]);
           Object(s.useEffect)(
             () => (
-              p.addListener(u.Esc, x),
+              p.addListener(keyMap.Esc, x),
               () => {
-                p.removeListener(u.Esc, x);
+                p.removeListener(keyMap.Esc, x);
               }
             ),
             [x]
           ),
             Object(s.useEffect)(
               () => (
-                p.addListener(u.UI, v),
+                p.addListener(keyMap.UI, v),
                 () => {
-                  p.removeListener(u.UI, v);
+                  p.removeListener(keyMap.UI, v);
                 }
               ),
               [v]
