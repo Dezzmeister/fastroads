@@ -113,7 +113,7 @@
       }
       var d = new l(!0);
       var c = window.localStorage.getItem("isDev");
-      var p = new (class {
+      var input = new (class {
         constructor() {
           (this.key = {}),
             (this.mouse = {
@@ -356,7 +356,7 @@
         }
       })(v);
       const b = window.location.pathname.includes("dash");
-      var f = new (class {
+      var game = new (class {
           constructor() {
             (this.appTime = 0),
               (this.listeners = []),
@@ -376,15 +376,15 @@
               (this.playTime = 0),
               (this.pTime = this.startTime),
               (this.pSlowTime = this.startTime),
-              p.addListener(keyMap.Pause, () => {
+              input.addListener(keyMap.Pause, () => {
                 this.toggle(!0);
               }),
               c &&
-                (p.addListener(keyMap.StepTicker, this.tickOnce.bind(this)),
-                p.addListener(keyMap.Plus, () => {
+                (input.addListener(keyMap.StepTicker, this.tickOnce.bind(this)),
+                input.addListener(keyMap.Plus, () => {
                   (this.playSpeed += 0.25), console.log(this.playSpeed);
                 }),
-                p.addListener(keyMap.Minus, () => {
+                input.addListener(keyMap.Minus, () => {
                   this.playSpeed > 0.3 && (this.playSpeed -= 0.25),
                     console.log(this.playSpeed);
                 })),
@@ -533,7 +533,7 @@
           vol: 0.5,
         },
       };
-      var Audio = new (class {
+      var audio = new (class {
         constructor() {
           (this.loader = new r.d()),
             (this.hasInit = !1),
@@ -547,8 +547,8 @@
             (this.fadeCounter = 0),
             (this.fadeTime = 1),
             (this.listener = new r.c()),
-            f.addStateListener(this.onTickerStateBound),
-            f.addBlurListener(this.onTickerStateBound),
+            game.addStateListener(this.onTickerStateBound),
+            game.addBlurListener(this.onTickerStateBound),
             this.listener.setMasterVolume(w.AudioLevel),
             (this.prevLevel = w.AudioLevel),
             w.addListener(x.AudioLevel, this.onLevelChangedBound),
@@ -561,7 +561,7 @@
           (this.muted = 0 == e), this.listener.setMasterVolume(e);
         }
         onTickerState(e) {
-          f.paused || f.blurred
+          game.paused || game.blurred
             ? ((this.wasMuted = this.muted), this.listener.setMasterVolume(0))
             : this.wasMuted || this.listener.setMasterVolume(w.AudioLevel);
         }
@@ -570,7 +570,7 @@
           "running" !== this.listener.context.state &&
             (this.listener.context.resume(),
             this.listener.setMasterVolume(0),
-            f.addListener(this.fadeInBound));
+            game.addListener(this.fadeInBound));
           for (let t in I) (e = I[t]), this.loadAudio(e);
           this.hasInit = !0;
         }
@@ -579,7 +579,7 @@
           let t = Math.min(w.AudioLevel, this.fadeCounter / this.fadeTime);
           this.listener.setMasterVolume(t),
             this.fadeCounter / this.fadeTime >= 1 &&
-              f.removeListener(this.fadeInBound);
+              game.removeListener(this.fadeInBound);
         }
         play(e) {
           e in I &&
@@ -611,7 +611,7 @@
           (this.muted = !1), this.listener.setMasterVolume(1);
         }
         toggleMute() {
-          f.paused
+          game.paused
             ? (this.wasMuted = !this.wasMuted)
             : ((this.muted = !this.muted),
               this.muted && w.AudioLevel > 0 && (this.prevLevel = w.AudioLevel),
@@ -936,11 +936,11 @@
           {
             midlineHorizon: 4e3,
             midlineFineHorizon: 150,
-            farSize: 1e3,
-            viewDist: 8e3,
+            farSize: 4e3,
+            viewDist: 1e4,
             fwdHorizon: 300,
             rearHorizon: 25,
-            nearFwdHorizon: 50,
+            nearFwdHorizon: 40,
             wallGenHorizon: 115,
             wallRenderHorizon: 70,
           },
@@ -959,6 +959,7 @@
           { medRes: 8, nearRes: 16 },
           { medRes: 10, nearRes: 20 },
           { medRes: 12, nearRes: 24 },
+          { medRes: 14, nearRes: 28 },
         ],
         storedViewLodIndex = isNaN(
           parseInt(window.localStorage.getItem("config-view-lod-index"))
@@ -993,7 +994,7 @@
             (wallRenderHorizon = renderLevel.wallRenderHorizon),
             (ge.density = Math.sqrt(5 / (viewDist * viewDist)));
         },
-        q = (e) => {
+        setDetailLevel = (e) => {
           (X = Q[e]),
             (U = e),
             (me = X.medRes),
@@ -9560,7 +9561,7 @@
                 Pe.userData.camPos.value.copy(Be.parent.position))
               : (Li.userData.camPos.value.copy(Be.position),
                 Pe.userData.camPos.value.copy(Be.position)),
-            (Li.userData.time.value = 2 * f.appTime),
+            (Li.userData.time.value = 2 * game.appTime),
             (Li.uniformsNeedUpdate = !0),
             this.cycleWeathers
               ? this.updateWeather(e)
@@ -9980,7 +9981,7 @@
               void 0 === i
                 ? void 0
                 : i.ambiance) || n.audio.ambiance;
-          Audio.getAudio(h.src, (e) => {
+          audio.getAudio(h.src, (e) => {
             this.ambientAudio && this.ambientAudio.stop(),
               e.setLoop(!0),
               e.setLoopStart(h.ls),
@@ -9996,7 +9997,7 @@
             void 0 === a
               ? void 0
               : a.wind) || n.audio.wind;
-          Audio.getAudio(r.src, (e) => {
+          audio.getAudio(r.src, (e) => {
             this.windAudio && this.windAudio.stop(),
               e.setLoop(!0),
               e.setLoopStart(r.ls),
@@ -11850,7 +11851,7 @@
               ? void 0
               : i.ambiance) || n.audio.ambiance;
           null !== h.src &&
-            Audio.getAudio(h.src, (e) => {
+            audio.getAudio(h.src, (e) => {
               this.ambientAudio && this.ambientAudio.stop(),
                 e.setLoop(!0),
                 e.setLoopStart(h.ls),
@@ -11868,7 +11869,7 @@
               ? void 0
               : a.wind) || n.audio.wind;
           null !== r.src &&
-            Audio.getAudio(r.src, (e) => {
+            audio.getAudio(r.src, (e) => {
               e.setLoop(!0),
                 e.setLoopStart(r.ls),
                 e.setLoopEnd(e.buffer.duration - r.le),
@@ -12146,7 +12147,7 @@
             hideVehicle: !0,
           },
         },
-        vr = {
+        vehicles = {
           Debug: {
             enabled: !1,
             name: "Debug",
@@ -12321,6 +12322,47 @@
           },
           Roadster: {
             enabled: !0,
+            name: "Roadster",
+            bodyObj: i(40),
+            wheelObj: i(41),
+            map: mr,
+            icon: ur,
+            audio: { roll: cr, engine: pr },
+            wheels: {
+              tyreWidth: 0.1,
+              width: 1.36,
+              length: 2.75,
+              radius: 0.342665,
+              circumference: 2.1,
+              travel: 0.07,
+            },
+            skins: { basic: { body: 16316664 } },
+            metrics: {
+              shadowMapSize: 4,
+              steerSpeed: 1.57,
+              accel: 9,
+              reverse: 5,
+              jerk: 48,
+              brake: 8,
+              mass: 700,
+              steerAccel: 12,
+              maxSteer: 0.68,
+              axleHeight: 0.342665,
+              dampening: 0.04,
+              rockFactor: 4,
+              drag: 0.001,
+              topSpeed: 45,
+              rollResistance: 0.06,
+              steerInterval: 1,
+              slipBase: 0.1,
+              slipMod: 0.05,
+              aeroFactor: 0.4,
+              headlightPos: { x: 0.64, y: 0.7, z: 3.1 },
+            },
+            cameras: xr,
+          },
+          Lambo: {
+            enabled: !0,
             name: "Lambo",
             bodyObj: i(40),
             wheelObj: i(41),
@@ -12340,16 +12382,16 @@
               shadowMapSize: 4,
               steerSpeed: 3.0,
               accel: 40,
-              reverse: 30,
+              reverse: 60,
               jerk: 60,
-              brake: 30,
-              mass: 700,
-              steerAccel: 20,
+              brake: 50,
+              mass: 1400,
+              steerAccel: 40,
               maxSteer: 0.68,
               axleHeight: 0.342665,
               dampening: 0.04,
               rockFactor: 4,
-              drag: 0.0,
+              drag: 0.001,
               topSpeed: 500,
               rollResistance: 0.06,
               steerInterval: 1,
@@ -12402,7 +12444,12 @@
             cameras: xr,
           },
         };
-      const wr = { Roadster: vr.Roadster, Bike: vr.Bike, Coach: vr.Bus },
+      const vehicleMap = {
+          Roadster: vehicles.Roadster,
+          Bike: vehicles.Bike,
+          Coach: vehicles.Bus,
+          Lambo: vehicles.Lambo,
+        },
         br = 1,
         fr = 2;
       const yr = 0,
@@ -12413,21 +12460,23 @@
           mode: "config-vehicle-mode",
           input: "config-vehicle-input",
         },
-        Nr = { type: "Roadster", mode: 0, input: 0 };
+        defaultVehicleSettings = { type: "Roadster", mode: 0, input: 0 };
       var jr = new (class extends m {
         constructor() {
-          super(), (this.value = Nr), this.loadConfig();
+          super(), (this.value = defaultVehicleSettings), this.loadConfig();
         }
         set(e, t) {
           super.set(e, t), window.localStorage.setItem(Mr[e], t);
         }
         resetMemory() {
-          for (let e in this.value) window.localStorage.setItem(Mr[e], Nr[e]);
+          for (let e in this.value)
+            window.localStorage.setItem(Mr[e], defaultVehicleSettings[e]);
         }
         loadConfig() {
           let e, t;
           for (t in this.value)
-            (e = window.localStorage.getItem(Mr[t]) || Nr[t]),
+            (e =
+              window.localStorage.getItem(Mr[t]) || defaultVehicleSettings[t]),
               isNaN(parseInt(e)) || (e = parseInt(e)),
               (this[t] = e),
               console.log("VehicleConfig: Load ", t, e),
@@ -12523,7 +12572,7 @@
             (this.doInitialiseAnalytics = !1),
             (this.analyticsInitialised = !1),
             (window.onbeforeunload = () => this.savePlayerProfile()),
-            f.addStateListener(this.onTickerStateChangedBound),
+            game.addStateListener(this.onTickerStateChangedBound),
             Rr.addListener(this.onCruiseTargetBound),
             y.addListener((e) => {
               this.sendUpdate("autodrive", e);
@@ -12699,7 +12748,7 @@
             this.setStorage(Er, !0),
             this.setStorage(
               Zr,
-              Math.floor(this.playerProfile.totalTime + 1e3 * f.playTime)
+              Math.floor(this.playerProfile.totalTime + 1e3 * game.playTime)
             ),
             this.setStorage(Wr, this.playerProfile.totalDist),
             this.setStorage(Fr, this.playerProfile.seeds),
@@ -15096,7 +15145,7 @@
             dr.addListener("weatherIndex", this.setSceneWeatherIndexBound),
             this.container.add(this.envLayer),
             setRenderLevel(dr.value.viewLodIndex),
-            q(dr.value.detailLodIndex);
+            setDetailLevel(dr.value.detailLodIndex);
         }
         nextSkin() {
           let e = dr.value.sceneName,
@@ -15188,7 +15237,7 @@
         }
         _updateConfig() {
           setRenderLevel(dr.value.viewLodIndex),
-            q(dr.value.detailLodIndex),
+            setDetailLevel(dr.value.detailLodIndex),
             this.scene.updateConfig(
               dr.value.viewLodIndex,
               dr.value.detailLodIndex
@@ -15471,7 +15520,7 @@
             (this.randFrame = !1),
             (this.onViewChange = e),
             (this.camera = Be),
-            this.camera.add(Audio.listener),
+            this.camera.add(audio.listener),
             z.addListener(M, this.reset.bind(this)),
             z.addListener(N, this.initVehicleAngles.bind(this)),
             window.localStorage.getItem(jo))
@@ -15532,13 +15581,13 @@
             this.onViewChange();
         }
         update(e) {
-          p.key[keyMap.Camera] &&
+          input.key[keyMap.Camera] &&
             ((this.modeIndex = (this.modeIndex + 1) % No.length),
             (this.mode = Mo[No[this.modeIndex]]),
             window.localStorage.setItem(jo, this.modeIndex),
             this.reset(),
             Jr.sendUpdate("cameraChange", No[this.modeIndex]),
-            (p.key[keyMap.Camera] = !1)),
+            (input.key[keyMap.Camera] = !1)),
             (this.uLerpA = this.smoothLerp(z.speed / this.mode.farSpeed)),
             (this.uLerpB = 1 - this.uLerpA),
             (this.uSmoothA = Math.min(e / (k * this.mode.smoothFactor), 1)),
@@ -15682,7 +15731,7 @@
               this.lockChangeAlertBound,
               !1
             ),
-            this.camera.add(Audio.listener),
+            this.camera.add(audio.listener),
             (this.debug = new r.B(
               new r.Q(2, 32, 16),
               new r.C({ color: 110832 })
@@ -15729,14 +15778,14 @@
         }
         update(e) {
           if (
-            (p.key[keyMap.Camera] &&
+            (input.key[keyMap.Camera] &&
               ((this.camera.far = 1e4),
               this.camera.updateProjectionMatrix(),
-              (p.key[keyMap.Camera] = !1)),
-            p.key[keyMap.StickySteer] &&
-              ((p.key[keyMap.StickySteer] = !1),
+              (input.key[keyMap.Camera] = !1)),
+            input.key[keyMap.StickySteer] &&
+              ((input.key[keyMap.StickySteer] = !1),
               (this.matchSpeed = !this.matchSpeed)),
-            p.key[keyMap.NodeDebug])
+            input.key[keyMap.NodeDebug])
           ) {
             let e = Je(
                 this.camContainer.position.x,
@@ -15751,7 +15800,7 @@
               );
             console.log("Near node is " + t.n.i + " at dist " + t.d),
               this.debug.position.copy(t.n.p),
-              (p.key[keyMap.NodeDebug] = !1);
+              (input.key[keyMap.NodeDebug] = !1);
           }
           this.matchSpeed
             ? (this.targetSpeed = Math.max(1, z.speed))
@@ -15760,51 +15809,51 @@
             this.posVec.set(0, 0, 0),
             (this.dir.x = 0),
             (this.hadInput = !1),
-            p.key[keyMap.Forward] &&
+            input.key[keyMap.Forward] &&
               ((this.hadInput = !0),
               (this.posVec.x -= e * this.speed * this.sX),
               (this.posVec.z -= e * this.speed * this.sZ)),
-            p.key[keyMap.Backward] &&
+            input.key[keyMap.Backward] &&
               ((this.hadInput = !0),
               (this.posVec.x += e * this.speed * this.sX),
               (this.posVec.z += e * this.speed * this.sZ)),
             (this.dir.z = 0),
-            p.key[keyMap.Left] &&
+            input.key[keyMap.Left] &&
               ((this.hadInput = !0),
               (this.posVec.x -= e * this.speed * this.sZ),
               (this.posVec.z += e * this.speed * this.sX)),
-            p.key[keyMap.Right] &&
+            input.key[keyMap.Right] &&
               ((this.hadInput = !0),
               (this.posVec.x += e * this.speed * this.sZ),
               (this.posVec.z -= e * this.speed * this.sX)),
             (this.hadElev = !1),
-            p.click.right
+            input.click.right
               ? ((this.hadElev = !0), (this.posVec.y -= e * this.elevSpeed))
-              : p.click.left &&
+              : input.click.left &&
                 ((this.hadElev = !0), (this.posVec.y += e * this.elevSpeed)),
             this.hadInput &&
               !this.matchSpeed &&
               (this.targetSpeed = this.baseSpeed),
             this.hadElev && (this.targetElevSpeed = this.baseElevSpeed),
-            p.key[keyMap.BoostAccel] && (this.targetSpeed *= 2),
+            input.key[keyMap.BoostAccel] && (this.targetSpeed *= 2),
             (this.speed = 0.9 * this.speed + 0.1 * this.targetSpeed),
             (this.elevSpeed =
               0.95 * this.elevSpeed + 0.05 * this.targetElevSpeed),
             (this.hadRot = !1),
             (this.targetRotSpeed = 0),
-            p.key[keyMap.LeftArrow]
+            input.key[keyMap.LeftArrow]
               ? ((this.hadRot = !0), (this.targetRotY += e * this.rotSpeed))
-              : p.key[keyMap.RightArrow] &&
+              : input.key[keyMap.RightArrow] &&
                 ((this.hadRot = !0), (this.targetRotY -= e * this.rotSpeed)),
-            p.key[keyMap.UpArrow]
+            input.key[keyMap.UpArrow]
               ? ((this.hadRot = !0),
                 (this.targetRotX -= e * this.rotSpeed * 0.5))
-              : p.key[keyMap.DownArrow] &&
+              : input.key[keyMap.DownArrow] &&
                 ((this.hadRot = !0),
                 (this.targetRotX += e * this.rotSpeed * 0.5)),
             this.hadRot &&
               (this.targetRotSpeed = (1 * this.baseRotSpeed) / this.curZoom),
-            p.key[keyMap.Num1] && (this.targetRotSpeed *= 2),
+            input.key[keyMap.Num1] && (this.targetRotSpeed *= 2),
             (this.rotSpeed = 0.98 * this.rotSpeed + 0.02 * this.targetRotSpeed),
             (this.camContainer.rotation.x =
               this.camContainer.rotation.x * (1 - this.rotSmooth) +
@@ -15814,19 +15863,19 @@
               this.targetRotY * this.rotSmooth),
             (this.sX = Math.sin(this.camContainer.rotation.y + Math.PI)),
             (this.sZ = Math.cos(this.camContainer.rotation.y + Math.PI)),
-            0 != p.scrollDelta &&
-              ((this.targetZoom -= p.scrollDelta * e * this.zoomSpeed),
+            0 != input.scrollDelta &&
+              ((this.targetZoom -= input.scrollDelta * e * this.zoomSpeed),
               (this.targetZoom = Math.max(
                 Math.min(this.maxZoom, this.targetZoom),
                 this.minZoom
               )),
-              (p.scrollDelta = 0)),
+              (input.scrollDelta = 0)),
             (this.curZoom = 0.95 * this.curZoom + 0.05 * this.targetZoom),
             this.curZoom != this.camera.zoom &&
               ((this.camera.zoom = this.curZoom),
               this.camera.updateProjectionMatrix()),
-            p.key[keyMap.T] &&
-              ((p.key[keyMap.T] = !1),
+            input.key[keyMap.T] &&
+              ((input.key[keyMap.T] = !1),
               (this.track = !this.track),
               this.track ||
                 ((this.camera.rotation.x = 0),
@@ -15836,8 +15885,8 @@
               (this.trackPosition.copy(z.frontAxlePosition),
               (this.trackPosition.y += 0.5),
               this.camContainer.lookAt(this.trackPosition)),
-            p.key[keyMap.ResetCamera] &&
-              (this.reset(), (p.key[keyMap.ResetCamera] = !1)),
+            input.key[keyMap.ResetCamera] &&
+              (this.reset(), (input.key[keyMap.ResetCamera] = !1)),
             this.camera.getWorldDirection(this.camFwd),
             this.targetPosition.add(this.posVec),
             this.camContainer.position.lerp(
@@ -15892,7 +15941,7 @@
             (this.sound = null),
             this.loadAchievements(),
             (this.hasLoaded = !0),
-            Audio.getAudio(Lo, (e) => {
+            audio.getAudio(Lo, (e) => {
               this.sound = e;
             });
         }
@@ -15910,7 +15959,7 @@
               (this.value[t] = e);
         }
       })();
-      const Go = Object.keys(wr),
+      const Go = Object.keys(vehicleMap),
         Bo = () => ({ personal: Eo(), global: { daily: Eo(), allTime: Eo() } }),
         Eo = () => {
           let e = {};
@@ -16055,8 +16104,8 @@
         }
         onDisplay(e) {
           e
-            ? (this.resetFastestMile(), f.addSlowListener(this.updateBound))
-            : f.addSlowListener(this.updateBound);
+            ? (this.resetFastestMile(), game.addSlowListener(this.updateBound))
+            : game.addSlowListener(this.updateBound);
         }
         onSocket(e) {
           e.on("leaderboard", this.onNewLeaderboard.bind(this)),
@@ -16100,7 +16149,7 @@
         }
         resetFastestMile() {
           Wo.set("liveInterval", {
-            startTime: f.playTime,
+            startTime: game.playTime,
             startNode: Ke.vehicleIndex,
             endNode: Ke.vehicleIndex + 160,
           }),
@@ -16137,7 +16186,7 @@
                   Wo.live.value
                 ),
                 Wo.set("liveInterval", {
-                  startTime: f.playTime,
+                  startTime: game.playTime,
                   startNode: Ke.vehicleIndex,
                   endNode: Ke.vehicleIndex + 160,
                 }),
@@ -16248,7 +16297,7 @@
         }
         loadHit(e) {
           this.soundCount++,
-            Audio.getPositionalAudio(
+            audio.getPositionalAudio(
               Al.hits[e],
               (t) => {
                 (this.worldSounds.hits[e] = t),
@@ -16267,7 +16316,7 @@
         loadWorldSounds() {
           for (let e = 0; e < Al.hits.length; e++) this.loadHit(e);
           this.soundCount++,
-            Audio.getPositionalAudio(Al.scrape, (e) => {
+            audio.getPositionalAudio(Al.scrape, (e) => {
               this.worldSounds.scrape &&
                 (this.worldSounds.scrape.stop(),
                 z.remove(this.worldSounds.scrape)),
@@ -16286,7 +16335,7 @@
         }
         loadTyre(e, t) {
           (this.soundCount += 4),
-            Audio.getPositionalAudio(
+            audio.getPositionalAudio(
               gl.tyre,
               (i) => {
                 this.sounds.tyres[e] && this.sounds.tyres[e].stop(),
@@ -16307,7 +16356,7 @@
               },
               this.sounds.tyres[e]
             ),
-            Audio.getPositionalAudio(
+            audio.getPositionalAudio(
               gl.roll,
               (i) => {
                 this.sounds.rolls[e] && this.sounds.rolls[e].stop(),
@@ -16328,7 +16377,7 @@
               },
               this.sounds.rolls[e]
             ),
-            Audio.getPositionalAudio(
+            audio.getPositionalAudio(
               gl.offroad,
               (i) => {
                 this.sounds.offroads[e] && this.sounds.offroads[e].stop(),
@@ -16350,7 +16399,7 @@
               },
               this.sounds.offroads[e]
             ),
-            Audio.getPositionalAudio(
+            audio.getPositionalAudio(
               gl.sus,
               (i) => {
                 this.sounds.sus[e] && this.sounds.sus[e].stop(),
@@ -16374,7 +16423,7 @@
         }
         loadSound(e, t) {
           this.soundCount++,
-            Audio.getPositionalAudio(
+            audio.getPositionalAudio(
               t,
               (t) => {
                 var i;
@@ -16959,7 +17008,7 @@
             this.changeInput(jr.value.input, !0),
             w.addListener("Units", this.onUnitsChangedBound),
             this.onUnitsChanged(w.Units),
-            this.initVehicle(wr[jr.value.type]),
+            this.initVehicle(vehicleMap[jr.value.type]),
             (this.dom.speed = document.getElementById("ui-speed-val")),
             (this.dom.dist = document.getElementById("ui-dist-val")),
             (this.dom.mouseMarker = document.getElementById(
@@ -16971,13 +17020,13 @@
             (Sr.dist =
               10 * (Ke.vehicleNode.i - Ke.initIndex + dr.accumulatedProgress)),
             dr.addListener("weatherIndex", () => this.updateHeadlights()),
-            p.addListener(keyMap.Headlights, () =>
+            input.addListener(keyMap.Headlights, () =>
               z.setHeadlights(!z.headlights, !0)
             ),
-            p.addListener(keyMap.Lights, () =>
+            input.addListener(keyMap.Lights, () =>
               z.setHeadlights(!z.headlights, !0)
             ),
-            p.addListener(keyMap.AutoDrive, () => {
+            input.addListener(keyMap.AutoDrive, () => {
               this.canToggleAutodrive &&
                 (y.set(!this.autodrive), (this.canToggleAutodrive = !1));
             }),
@@ -17050,7 +17099,7 @@
           this.setLights(z.headlights);
         }
         changeVehicle(e) {
-          this.initVehicle(wr[e]), Jr.sendUpdate("vehicleChange", e);
+          this.initVehicle(vehicleMap[e]), Jr.sendUpdate("vehicleChange", e);
         }
         changeMode(e) {
           this.setDriveMode(e), Jr.sendUpdate("driveModeChange", e);
@@ -18053,10 +18102,10 @@
         handleInput(e) {
           (this.inputs.accel = 0),
             (this.inputs.drive = 0),
-            0 != p.scrollDelta &&
+            0 != input.scrollDelta &&
               null != Rr.value &&
-              (p.scrollDelta < 0 ? Rr.inc5() : Rr.dec5()),
-            (this.canToggleAutodrive = !p.key[keyMap.AutoDrive]),
+              (input.scrollDelta < 0 ? Rr.inc5() : Rr.dec5()),
+            (this.canToggleAutodrive = !input.key[keyMap.AutoDrive]),
             (this.inputDisabled && !this.autodrive) ||
               (this.autodrive
                 ? (this.autoDriver.update(e),
@@ -18080,14 +18129,14 @@
                       (Cl.redlight.emissiveIntensity = jl))
                     : ((z.braking = !1), (Cl.redlight.emissiveIntensity = 0)),
                   !this.useMouse &&
-                  (p.key[keyMap.Left] ||
-                    p.key[keyMap.LeftArrow] ||
-                    p.key[keyMap.Forward] ||
-                    p.key[keyMap.UpArrow] ||
-                    p.key[keyMap.Right] ||
-                    p.key[keyMap.RightArrow] ||
-                    p.key[keyMap.Backward] ||
-                    p.key[keyMap.DownArrow])
+                  (input.key[keyMap.Left] ||
+                    input.key[keyMap.LeftArrow] ||
+                    input.key[keyMap.Forward] ||
+                    input.key[keyMap.UpArrow] ||
+                    input.key[keyMap.Right] ||
+                    input.key[keyMap.RightArrow] ||
+                    input.key[keyMap.Backward] ||
+                    input.key[keyMap.DownArrow])
                     ? this.canCancelAutodrive &&
                       !this.inputDisabled &&
                       y.set(!1)
@@ -18098,10 +18147,11 @@
                   (zl.h2 = window.innerHeight / 2),
                   (zl.wHeight =
                     window.innerHeight * (Oo.mouseWidgetHeight / 100) + 25),
-                  p.mouseEnabled
-                    ? ((this.mouse.x = (p.mouse.x - zl.w2) / zl.mouseWidth),
+                  input.mouseEnabled
+                    ? ((this.mouse.x = (input.mouse.x - zl.w2) / zl.mouseWidth),
                       (this.mouse.y =
-                        (-(p.mouse.y - (zl.h2 - zl.wHeight) - zl.h2) / zl.h2) *
+                        (-(input.mouse.y - (zl.h2 - zl.wHeight) - zl.h2) /
+                          zl.h2) *
                         2))
                     : ((this.mouse.x = 0), (this.mouse.y = 0)),
                   (this.mouse.x = Math.max(Math.min(1, this.mouse.x), -1)),
@@ -18112,12 +18162,12 @@
                     (this.steer = 0),
                     (this.mouse.x = 0)),
                   null == Rr.value
-                    ? ((this.hasAccel = p.click.left && this.canMouse),
+                    ? ((this.hasAccel = input.click.left && this.canMouse),
                       this.hasAccel && (this.inputs.accel = z.metrics.accel),
                       (this.hasBoost = !1))
-                    : ((this.hasAccel = p.click.left && this.canMouse),
+                    : ((this.hasAccel = input.click.left && this.canMouse),
                       (this.hasBoost = null !== Rr.value && this.hasAccel)),
-                  p.click.right
+                  input.click.right
                     ? ((this.hasAccel = !1),
                       z.direction > 0
                         ? (z.braking || (z.brakeLerp = 0),
@@ -18152,17 +18202,18 @@
                     1 - (z.speed / z.metrics.topSpeed) * 0.4))
                 : ((this.hasBoost =
                     this.hasBoost && (this.hasAccel || null !== Rr.value)),
-                  p.key[keyMap.Forward] || p.key[keyMap.UpArrow]
+                  input.key[keyMap.Forward] || input.key[keyMap.UpArrow]
                     ? (this.hasAccel ||
                         0 != w.DoubleTap ||
                         ((this.hasBoost =
-                          !this.hasAccel && f.appTime - this.lastAccel < 0.15),
+                          !this.hasAccel &&
+                          game.appTime - this.lastAccel < 0.15),
                         (this.boostFromTap = this.hasBoost)),
                       this.boostFromTap ||
-                        (this.hasBoost = !!p.key[keyMap.BoostAccel]),
+                        (this.hasBoost = !!input.key[keyMap.BoostAccel]),
                       Xo.Boost && this.hasBoost && Jo("Boost"),
                       (this.hasAccel = !0),
-                      (this.lastAccel = f.appTime),
+                      (this.lastAccel = game.appTime),
                       !this.hasBoost && z.direction < 0
                         ? ((z.braking = !0),
                           (Cl.redlight.emissiveIntensity = jl))
@@ -18170,7 +18221,7 @@
                           (Cl.redlight.emissiveIntensity = 0),
                           (this.inputs.accel = z.metrics.accel)),
                       (this.holdHandbrake = !1))
-                    : p.key[keyMap.Backward] || p.key[keyMap.DownArrow]
+                    : input.key[keyMap.Backward] || input.key[keyMap.DownArrow]
                     ? ((this.hasAccel = !1),
                       z.direction > 0
                         ? (z.braking || (z.brakeLerp = 0),
@@ -18184,25 +18235,27 @@
                       (z.braking = !1),
                       (Cl.redlight.emissiveIntensity = 0)),
                   (this.inputs.steer = 0),
-                  (p.key[keyMap.Left] || p.key[keyMap.LeftArrow]) &&
+                  (input.key[keyMap.Left] || input.key[keyMap.LeftArrow]) &&
                     (this.inputs.steer += 1),
-                  (p.key[keyMap.Right] || p.key[keyMap.RightArrow]) &&
+                  (input.key[keyMap.Right] || input.key[keyMap.RightArrow]) &&
                     (this.inputs.steer -= 1),
-                  (this.inputs.stiffSteer = p.key[keyMap.StickySteer]),
+                  (this.inputs.stiffSteer = input.key[keyMap.StickySteer]),
                   this.inputs.stiffSteer &&
-                    p.key[keyMap.Handbrake] &&
+                    input.key[keyMap.Handbrake] &&
                     !this.inputs.handbrake &&
                     (this.holdHandbrake = !0),
-                  (this.inputs.handbrake = !z.bike && p.key[keyMap.Handbrake]),
+                  (this.inputs.handbrake =
+                    !z.bike && input.key[keyMap.Handbrake]),
                   (z.handbrake =
-                    (!z.bike && p.key[keyMap.Handbrake]) ||
+                    (!z.bike && input.key[keyMap.Handbrake]) ||
                     this.holdHandbrake)),
               null === Rr.value ||
                 this.autodrive ||
                 z.braking ||
                 z.handbrake ||
                 (0 != this.inputs.accel && !this.useMouse) ||
-                (this.useMouse || (this.hasBoost = !!p.key[keyMap.BoostAccel]),
+                (this.useMouse ||
+                  (this.hasBoost = !!input.key[keyMap.BoostAccel]),
                 this.inputs.accel >= 0 &&
                   Rr.value - z.speed > 0 &&
                   (this.inputs.accel = Math.min(
@@ -18220,28 +18273,28 @@
                   z.speed < 27 &&
                   (this.inputs.accel +=
                     z.metrics.accel * Math.max(0, 0.5 * (1 - z.speed / 27))),
-              p.key[keyMap.Reset]
+              input.key[keyMap.Reset]
                 ? (this.resetToNode(Ke.vehicleNode),
                   Xo.Reset && Jo("Reset"),
-                  (p.key[keyMap.Reset] = !1),
+                  (input.key[keyMap.Reset] = !1),
                   this.analytics.resetCount++,
                   Jr.sendUpdate("resetCount", this.analytics.resetCount),
                   (this.holdHandbrake = null == Rr.value))
                 : c &&
-                  (p.key[keyMap.PageUp] && Ke.vehicleNode.next
+                  (input.key[keyMap.PageUp] && Ke.vehicleNode.next
                     ? (this.resetToNode(Ke.vehicleNode.next),
                       (this.holdHandbrake = !0),
-                      (p.key[keyMap.PageUp] = !1))
-                    : p.key[keyMap.PageDown] &&
+                      (input.key[keyMap.PageUp] = !1))
+                    : input.key[keyMap.PageDown] &&
                       Ke.vehicleNode.prev &&
                       (this.resetToNode(Ke.vehicleNode.prev),
                       (this.holdHandbrake = !0),
-                      (p.key[keyMap.PageDown] = !1))),
+                      (input.key[keyMap.PageDown] = !1))),
               this.autodrive
                 ? ((z.steer = this.inputs.steer), z.updateSteer())
                 : this.getSoggySteerState(e),
               this.getDriveState(e),
-              this.inputDisabled || (p.scrollDelta = 0),
+              this.inputDisabled || (input.scrollDelta = 0),
               (z.hasBoost = this.hasBoost));
         }
         resetToNode(e) {
@@ -18479,8 +18532,8 @@
             (this.initialised = !1),
             (this.showCamPos = !1),
             (this.updateBound = this.update.bind(this)),
-            p.addListener(keyMap.Debug, this.toggleActive.bind(this)),
-            p.addListener(keyMap.Debug2, () => {
+            input.addListener(keyMap.Debug, this.toggleActive.bind(this)),
+            input.addListener(keyMap.Debug2, () => {
               this.showCamPos = !this.showCamPos;
             });
         }
@@ -18518,10 +18571,10 @@
             this.stats &&
               ((this.active = !this.active),
               this.active
-                ? (f.addListener(this.updateBound),
+                ? (game.addListener(this.updateBound),
                   (this.dom.style.display = "flex"),
                   (this.stats.dom.style.display = "block"))
-                : (f.removeListener(this.updateBound),
+                : (game.removeListener(this.updateBound),
                   (this.dom.style.display = "none"),
                   (this.stats.dom.style.display = "none")));
         }
@@ -18592,27 +18645,27 @@
               (this.stats.dom.style.right = "0"),
               (this.pauseDom = document.getElementById("game-paused")),
               this.pauseDom.addEventListener("mousedown", () => {
-                f.resume();
+                game.resume();
               }),
               this.initScene(e),
-              f.addStateListener(this.onTickerStateBound),
-              p.init(t),
-              p.addListener(keyMap.NodeDebug, () =>
+              game.addStateListener(this.onTickerStateBound),
+              input.init(t),
+              input.addListener(keyMap.NodeDebug, () =>
                 console.log(Ke.vehicleNode)
               ),
-              p.addListener(keyMap.Mute, () => {
+              input.addListener(keyMap.Mute, () => {
                 c &&
                   (null == this.scene.fog
                     ? (this.scene.fog = new r.q(16448255, 25e-5))
                     : (this.scene.fog = null)),
-                  Audio.toggleMute();
+                  audio.toggleMute();
               }),
-              p.addListener(keyMap.CameraToggle, () => this.toggleCamera()),
-              p.addListener(keyMap.E, () => {
-                this.isCineCam || ((p.key[keyMap.E] = !1), Do.nextSkin());
+              input.addListener(keyMap.CameraToggle, () => this.toggleCamera()),
+              input.addListener(keyMap.E, () => {
+                this.isCineCam || ((input.key[keyMap.E] = !1), Do.nextSkin());
               }),
-              p.addListener(keyMap.Q, () => {
-                this.isCineCam || ((p.key[keyMap.Q] = !1), Do.prevSkin());
+              input.addListener(keyMap.Q, () => {
+                this.isCineCam || ((input.key[keyMap.Q] = !1), Do.prevSkin());
               }),
               dr.addListener("seed", () => {
                 Jr.recordSeed(dr.value.seed), this.regenerateAll();
@@ -18636,7 +18689,7 @@
                   this.setSize(this.screenSize.x, this.screenSize.y);
               }),
               (this.renderScale = rr[dr.value.renderScale]),
-              p.lockKeys(),
+              input.lockKeys(),
               z.addListener(N, this.onVehicleChanged.bind(this)),
               this.generate();
           }
@@ -18648,9 +18701,9 @@
                 accumProg: dr.accumulatedProgress,
               }),
               dr.loadProgress(),
-              p.lockKeys(),
+              input.lockKeys(),
               this.vehicleController.suspend(),
-              f.removeListener(this.updateBound),
+              game.removeListener(this.updateBound),
               (this.midlineDidReset = !0),
               (this.loadProgress = 0),
               (this.loadStages.length = 0),
@@ -18699,7 +18752,7 @@
               }),
               (this.loadStage = this.loadStages[0]),
               this.loadStage.setup(),
-              f.addListener(this.loadLoopBound);
+              game.addListener(this.loadLoopBound);
           }
           regenerateViewDist() {
             Do.updateConfig(),
@@ -18754,7 +18807,7 @@
               }),
               (this.loadStage = this.loadStages[0]),
               this.loadStage.setup(),
-              f.addListener(this.loadLoopBound);
+              game.addListener(this.loadLoopBound);
           }
           loadLoop(e) {
             try {
@@ -18777,7 +18830,7 @@
                 )
                   return (
                     console.log("Loading complete"),
-                    f.removeListener(this.loadLoopBound),
+                    game.removeListener(this.loadLoopBound),
                     void this.onLoaded()
                   );
                 (this.loadStage = this.loadStages[0]),
@@ -18806,7 +18859,7 @@
                         "LOAD ERROR: Stuck at progress ",
                         this.loadProgress
                       ),
-                      void f.retire()
+                      void game.retire()
                     );
                   Qe(null, !0);
                 }
@@ -18820,14 +18873,14 @@
                 console.error(Tc),
                 this.onError(Tc.stack.toString()),
                 Jr.sendFeedback("LOAD ERROR: " + Tc.stack.toString()),
-                void f.retire()
+                void game.retire()
               );
             }
           }
           onLoaded() {
             this.initialised
               ? (this.vehicleController.reload(this.midlineDidReset),
-                p.unlockKeys())
+                input.unlockKeys())
               : (this.initVehicle(),
                 window.addEventListener("keydown", this.onAudioInitBound),
                 window.addEventListener("mousedown", this.onAudioInitBound),
@@ -18853,7 +18906,7 @@
                   this.awaitVehicleMotion.bind(this),
                   3e3
                 )),
-              p.unlockKeys(),
+              input.unlockKeys(),
               this.canvas.focus(),
               Jr.initialiseAnalytics();
           }
@@ -18861,7 +18914,7 @@
             this.vehicleController.resetToNode(Ke.vehicleNode);
           }
           onAudioInit() {
-            Audio.init(),
+            audio.init(),
               window.removeEventListener("keydown", this.onAudioInitBound),
               window.removeEventListener("mousedown", this.onAudioInitBound);
           }
@@ -18958,7 +19011,7 @@
               this.camController.destroy(),
                 this.vehicleController.destroy(),
                 this.bikeController.destroy(),
-                f.removeListener(this.updateBound);
+                game.removeListener(this.updateBound);
               this.scene.children.length;
 
             )
@@ -18975,10 +19028,10 @@
             z.headlights ||
               (z.setHeadlights(!0),
               (z.lightsContainer.position.y -= 100),
-              this.update(f.dT, f.appTime),
+              this.update(game.dT, game.appTime),
               z.setHeadlights(!1),
               (z.lightsContainer.position.y += 100)),
-              f.addListener(this.updateBound);
+              game.addListener(this.updateBound);
           }
           update(e, t) {
             try {
@@ -19006,7 +19059,7 @@
                 Jr.sendFeedback(
                   "UPDATE ERROR IN " + Tc.cause + ": " + Tc.stack.toString()
                 ),
-                void f.retire()
+                void game.retire()
               );
             }
             this.render(),
@@ -19028,7 +19081,7 @@
               Jr.sendUpdate("stats", {
                 fps: this.curFPS,
                 drawCalls: this.renderer.info.render.calls,
-                playTime: 1e3 * f.playTime,
+                playTime: 1e3 * game.playTime,
               });
           }
           onViewChange() {}
@@ -19954,10 +20007,10 @@
             children: Object(Ul.jsxs)("div", {
               id: "menu-bar",
               onMouseEnter: () => {
-                p.setMouseEnabled(!1);
+                input.setMouseEnabled(!1);
               },
               onMouseLeave: () => {
-                p.setMouseEnabled(!0);
+                input.setMouseEnabled(!0);
               },
               children: [
                 Object(Ul.jsx)(Hd, {}),
@@ -20122,7 +20175,7 @@
             }, [n, t, i]),
             Object(s.useEffect)(
               () => () => {
-                p.unlockKeys();
+                input.unlockKeys();
               },
               []
             ),
@@ -20140,10 +20193,10 @@
                   13 == e.which && e.target.blur();
                 },
                 onFocus: () => {
-                  p.lockKeys();
+                  input.lockKeys();
                 },
                 onBlur: () => {
-                  n || a(seed), p.unlockKeys();
+                  n || a(seed), input.unlockKeys();
                 },
               }),
             })
@@ -20400,12 +20453,12 @@
             Object(Ul.jsxs)(nc, {
               icon: pd,
               children: [
-                Object.keys(wr).map((t) =>
+                Object.keys(vehicleMap).map((t) =>
                   Object(Ul.jsx)(
                     rc,
                     {
                       selected: t == e,
-                      icon: wr[t].icon,
+                      icon: vehicleMap[t].icon,
                       label: t.toLowerCase(),
                       onMouseDown: () => jr.set("type", t),
                     },
@@ -20639,13 +20692,13 @@
             }, [h, e]),
             Object(s.useEffect)(
               () => () => {
-                p.setMouseEnabled(!0), p.unlockKeys();
+                input.setMouseEnabled(!0), input.unlockKeys();
               },
               []
             ),
             Object(s.useEffect)(() => {
               e && (o(!1), window.localStorage.setItem("feedback-seen", !0)),
-                (e && !n) || (p.setMouseEnabled(!0), p.unlockKeys());
+                (e && !n) || (input.setMouseEnabled(!0), input.unlockKeys());
             }, [e, n]),
             Object(Ul.jsxs)(Ul.Fragment, {
               children: [
@@ -20709,10 +20762,10 @@
                                 value: i,
                                 onChange: (e) => a(e.target.value),
                                 onFocus: () => {
-                                  p.lockKeys();
+                                  input.lockKeys();
                                 },
                                 onBlur: () => {
-                                  p.unlockKeys();
+                                  input.unlockKeys();
                                 },
                               }),
                               Object(Ul.jsx)("div", {
@@ -21228,15 +21281,15 @@
         }
         onLoadState(e) {
           e
-            ? f.removeSlowListener(this.onTickBound)
-            : f.addSlowListener(this.onTickBound);
+            ? game.removeSlowListener(this.onTickBound)
+            : game.addSlowListener(this.onTickBound);
         }
         makePoint(e, t) {
           let i = this.svg.createSVGPoint();
           return (i.x = e), (i.y = t), i;
         }
         destroy() {
-          f.removeSlowListener(this.onTickBound),
+          game.removeSlowListener(this.onTickBound),
             d.removeListener(this.onLoadStateBound);
         }
         onTick(e) {
@@ -21733,25 +21786,25 @@
             [d, c] = Object(s.useState)(null),
             [g, m] = Object(s.useState)(!Dc),
             x = Object(s.useCallback)(() => {
-              a ? f.resume(!0) : f.pause(!0), !g && a && m(!0), n(!a);
+              a ? game.resume(!0) : game.pause(!0), !g && a && m(!0), n(!a);
             }, [n, a, m, g]),
             v = Object(s.useCallback)(() => {
               r(!h);
             }, [r, h]);
           Object(s.useEffect)(
             () => (
-              p.addListener(keyMap.Esc, x),
+              input.addListener(keyMap.Esc, x),
               () => {
-                p.removeListener(keyMap.Esc, x);
+                input.removeListener(keyMap.Esc, x);
               }
             ),
             [x]
           ),
             Object(s.useEffect)(
               () => (
-                p.addListener(keyMap.UI, v),
+                input.addListener(keyMap.UI, v),
                 () => {
-                  p.removeListener(keyMap.UI, v);
+                  input.removeListener(keyMap.UI, v);
                 }
               ),
               [v]
